@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Edit, Trash2, Eye, Grid as GridIcon, List as ListIcon } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Edit, Trash2, Eye, Grid as GridIcon, List as ListIcon, Filter, SortAsc, SortDesc, X } from 'lucide-react';
 import CardModal from './CardModal';
 import DeleteCardModal from './DeleteCardModal';
 import MTGCard from './MTGCard';
@@ -9,6 +9,141 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
+  
+  // Filter and sort state
+  const [filters, setFilters] = useState({
+    name: '',
+    type: '',
+    rarity: '',
+    colors: [],
+    archetype: ''
+  });
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter and sort logic
+  const filteredAndSortedCards = useMemo(() => {
+    let filtered = cards.filter(card => {
+      // Name filter
+      if (filters.name && !card.name.toLowerCase().includes(filters.name.toLowerCase())) {
+        return false;
+      }
+      
+      // Type filter
+      if (filters.type && !card.type_line?.toLowerCase().includes(filters.type.toLowerCase())) {
+        return false;
+      }
+      
+      // Rarity filter
+      if (filters.rarity && card.rarity !== filters.rarity) {
+        return false;
+      }
+      
+      // Color filter
+      if (filters.colors.length > 0) {
+        const cardColors = card.colors || [];
+        const hasMatchingColor = filters.colors.some(filterColor => 
+          cardColors.includes(filterColor)
+        );
+        if (!hasMatchingColor) {
+          return false;
+        }
+      }
+      
+      // Archetype filter
+      if (filters.archetype && card.archetype?.name !== filters.archetype) {
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Sort the filtered cards
+    return filtered.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'rarity':
+          const rarityOrder = { 'common': 1, 'uncommon': 2, 'rare': 3, 'mythic': 4 };
+          aValue = rarityOrder[a.rarity] || 0;
+          bValue = rarityOrder[b.rarity] || 0;
+          break;
+        case 'type':
+          aValue = a.type_line?.toLowerCase() || '';
+          bValue = b.type_line?.toLowerCase() || '';
+          break;
+        case 'mana_cost':
+          aValue = a.mana_cost || '';
+          bValue = b.mana_cost || '';
+          break;
+        case 'created_at':
+          aValue = new Date(a.created_at);
+          bValue = new Date(b.created_at);
+          break;
+        case 'serial':
+          // For serial sorting, we need to find the position of each card in the original grid
+          // This requires us to sort by the position in the original card order
+          const allCards = [...cards].sort((x, y) => x.id - y.id); // Original order
+          aValue = allCards.findIndex(card => card.id === a.id) + 1;
+          bValue = allCards.findIndex(card => card.id === b.id) + 1;
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+  }, [cards, filters, sortBy, sortOrder]);
+
+  // Filter and sort handlers
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handleColorFilterToggle = (color) => {
+    setFilters(prev => ({
+      ...prev,
+      colors: prev.colors.includes(color)
+        ? prev.colors.filter(c => c !== color)
+        : [...prev.colors, color]
+    }));
+  };
+
+  const handleSortChange = (newSortBy) => {
+    if (sortBy === newSortBy) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(newSortBy);
+      setSortOrder('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      name: '',
+      type: '',
+      rarity: '',
+      colors: [],
+      archetype: ''
+    });
+  };
+
+  const hasActiveFilters = () => {
+    return filters.name || filters.type || filters.rarity || filters.colors.length > 0 || filters.archetype;
+  };
 
   const handleDeleteClick = (card) => {
     setCardToDelete(card);
@@ -120,20 +255,33 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
     if (totalCards === 0) return [];
     
     const positions = [];
-    const maxSlots = totalCards;
     
-    // Sort cards by creation order (using ID as proxy for creation order)
-    const sortedCards = [...cards].sort((a, b) => a.id - b.id);
-    
-    for (let i = 1; i <= maxSlots; i++) {
-      const card = sortedCards[i - 1] || null;
-      const expectedColor = getExpectedColorForPosition(i);
-      positions.push({
-        position: i,
-        card: card,
-        isEmpty: !card,
-        expectedColor: expectedColor
+    // If sorting by serial, always show all positions including empty ones
+    // If filters are active but not sorting by serial, only show filtered cards without empty spots
+    if (hasActiveFilters() && sortBy !== 'serial') {
+      filteredAndSortedCards.forEach((card, index) => {
+        positions.push({
+          position: index + 1,
+          card: card,
+          isEmpty: false,
+          expectedColor: getExpectedColorForPosition(card.id) // Use card ID for expected color
+        });
       });
+    } else {
+      // Show all positions including empty ones (for serial sorting or no filters)
+      const maxSlots = totalCards;
+      const sortedCards = [...filteredAndSortedCards];
+      
+      for (let i = 1; i <= maxSlots; i++) {
+        const card = sortedCards[i - 1] || null;
+        const expectedColor = getExpectedColorForPosition(i);
+        positions.push({
+          position: i,
+          card: card,
+          isEmpty: !card,
+          expectedColor: expectedColor
+        });
+      }
     }
     
     return positions;
@@ -166,36 +314,256 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Cards ({cards.length})</h2>
-        <div className="flex items-center gap-2">
+      {/* Enhanced Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <Eye className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cards</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {filteredAndSortedCards.length} of {cards.length} cards
+                {hasActiveFilters() && ' (filtered)'}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
           <button
-            className={`btn btn-secondary btn-sm ${viewMode === 'grid' ? 'font-bold' : ''}`}
-            onClick={() => setViewMode('grid')}
-            title="Grid view"
+            className={`group relative inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+              showFilters 
+                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700' 
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
+            onClick={() => setShowFilters(!showFilters)}
+            title="Toggle filters"
           >
-            <GridIcon size={16} /> Grid
+            <Filter size={16} className="mr-2 group-hover:scale-110 transition-transform duration-200" />
+            Filter
+            {hasActiveFilters() && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+            )}
           </button>
-          <button
-            className={`btn btn-secondary btn-sm ${viewMode === 'list' ? 'font-bold' : ''}`}
-            onClick={() => setViewMode('list')}
-            title="List view"
-          >
-            <ListIcon size={16} /> List
-          </button>
+          
+          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
+            <button
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                viewMode === 'grid' 
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              onClick={() => setViewMode('grid')}
+              title="Grid view"
+            >
+              <GridIcon size={16} />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
+            <button
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                viewMode === 'list' 
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              onClick={() => setViewMode('list')}
+              title="List view"
+            >
+              <ListIcon size={16} />
+              <span className="hidden sm:inline">List</span>
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Enhanced Filter and Sort Controls */}
+      {showFilters && (
+        <div className="card mb-6 border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Filter className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Filter & Sort</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Refine your card collection</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {hasActiveFilters() && (
+                <button
+                  onClick={clearFilters}
+                  className="group inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-all duration-200"
+                  title="Clear all filters"
+                >
+                  <X size={16} className="group-hover:rotate-90 transition-transform duration-200" />
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {/* Name Filter */}
+            <div className="form-group">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-blue-500">🔍</span>
+                Name
+              </label>
+              <input
+                type="text"
+                value={filters.name}
+                onChange={(e) => handleFilterChange('name', e.target.value)}
+                placeholder="Search by name..."
+                className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              />
+            </div>
+
+            {/* Type Filter */}
+            <div className="form-group">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-green-500">🏷️</span>
+                Type
+              </label>
+              <input
+                type="text"
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
+                placeholder="Search by type..."
+                className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              />
+            </div>
+
+            {/* Rarity Filter */}
+            <div className="form-group">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-yellow-500">⭐</span>
+                Rarity
+              </label>
+              <select
+                value={filters.rarity}
+                onChange={(e) => handleFilterChange('rarity', e.target.value)}
+                className="form-select focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              >
+                <option value="">All Rarities</option>
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="mythic">Mythic</option>
+              </select>
+            </div>
+
+            {/* Archetype Filter */}
+            <div className="form-group">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-indigo-500">🏛️</span>
+                Archetype
+              </label>
+              <select
+                value={filters.archetype}
+                onChange={(e) => handleFilterChange('archetype', e.target.value)}
+                className="form-select focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              >
+                <option value="">All Archetypes</option>
+                {archetypes.map(archetype => (
+                  <option key={archetype.id} value={archetype.name}>
+                    {archetype.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Color Filter */}
+            <div className="form-group">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-purple-500">🎨</span>
+                Colors
+              </label>
+              <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                {['white', 'blue', 'black', 'red', 'green', 'colorless'].map(color => (
+                  <button
+                    key={color}
+                    onClick={() => handleColorFilterToggle(color)}
+                    className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      filters.colors.includes(color) 
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-sm' 
+                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <div className={`color-indicator color-${color} w-4 h-4 border-2`}></div>
+                    <span className="capitalize">{color}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort Controls */}
+            <div className="form-group">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-orange-500">📊</span>
+                Sort By
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { key: 'name', label: 'Name', icon: '📝' },
+                  { key: 'rarity', label: 'Rarity', icon: '⭐' },
+                  { key: 'type', label: 'Type', icon: '🏷️' },
+                  { key: 'mana_cost', label: 'Cost', icon: '⚡' },
+                  { key: 'serial', label: 'Serial', icon: '🔢' },
+                  { key: 'created_at', label: 'Date', icon: '📅' }
+                ].map(option => (
+                  <button
+                    key={option.key}
+                    onClick={() => handleSortChange(option.key)}
+                    className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      sortBy === option.key 
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-sm' 
+                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <span>{option.icon}</span>
+                    <span>{option.label}</span>
+                    {sortBy === option.key && (
+                      <div className="ml-1">
+                        {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {viewMode === 'grid' ? (
-        <div className="mtg-grid-container" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '20px',
-          justifyContent: 'center',
-          padding: '20px 0'
-        }}>
+        <div>
+          {hasActiveFilters() && sortBy !== 'serial' && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Filtering Active:</strong> Showing {filteredAndSortedCards.length} of {cards.length} cards. Empty spots are hidden when filtering.
+              </p>
+            </div>
+          )}
+          {hasActiveFilters() && sortBy === 'serial' && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-700">
+                <strong>Serial Sorting:</strong> Showing all positions including empty slots in their correct order.
+              </p>
+            </div>
+          )}
+          <div className="mtg-grid-container" style={{
+            display: 'grid',
+            gridTemplateColumns: (hasActiveFilters() && sortBy !== 'serial')
+              ? 'repeat(auto-fill, minmax(200px, 1fr))' 
+              : 'repeat(4, 1fr)',
+            gap: '20px',
+            justifyContent: 'center',
+            padding: '20px 0'
+          }}>
           {createGridPositions().map(({ position, card, isEmpty, expectedColor }) => (
-            <div key={position}>
+            <div key={hasActiveFilters() ? card?.id || position : position}>
               {isEmpty ? (
                 <EmptyGridSpot position={position} expectedColor={expectedColor} />
               ) : (
@@ -208,6 +576,7 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
               )}
             </div>
           ))}
+          </div>
         </div>
       ) : (
         <div className="card">
@@ -218,7 +587,7 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
             <div className="text-right">Actions</div>
           </div>
           <div className="space-y-2">
-            {cards.map((card) => (
+            {filteredAndSortedCards.map((card) => (
               <div key={card.id} className={`flex items-center justify-between p-4 ${getRarityBorderClass(card.rarity)}`}>
                 <div className="grid grid-cols-4 gap-4 flex-1 items-center">
                   <div>

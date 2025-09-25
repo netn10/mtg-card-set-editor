@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Plus, Settings, BarChart3, CreditCard } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -8,6 +8,30 @@ import SetEditor from './components/SetEditor';
 import CreateSet from './components/CreateSet';
 import ThemeToggle from './components/ThemeToggle';
 import './App.css';
+
+// Navigation component with active state detection
+const Navigation = () => {
+  const location = useLocation();
+  
+  return (
+    <nav className="tab-navigation">
+      <Link 
+        to="/" 
+        className={`tab-button ${location.pathname === '/' ? 'active' : ''}`}
+      >
+        <BarChart3 size={16} className="tab-icon" />
+        <span>Sets</span>
+      </Link>
+      <Link 
+        to="/create" 
+        className={`tab-button ${location.pathname === '/create' ? 'active' : ''}`}
+      >
+        <Plus size={16} className="tab-icon" />
+        <span>New Set</span>
+      </Link>
+    </nav>
+  );
+};
 
 function App() {
   const [sets, setSets] = useState([]);
@@ -53,17 +77,8 @@ function App() {
                     <CreditCard className="logo-icon" />
                     <span>MTG Set Editor</span>
                   </Link>
-                  <div className="flex items-center gap-4">
-                    <nav className="nav">
-                      <Link to="/" className="nav-link">
-                        <BarChart3 size={20} />
-                        Sets
-                      </Link>
-                      <Link to="/create" className="nav-link">
-                        <Plus size={20} />
-                        New Set
-                      </Link>
-                    </nav>
+                  <div className="flex items-center gap-6">
+                    <Navigation />
                     <ThemeToggle />
                   </div>
                 </div>

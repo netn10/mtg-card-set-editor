@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, X } from 'lucide-react';
+import { Save, X, Eye } from 'lucide-react';
 import { useNotification } from '../contexts/NotificationContext';
 
 const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
@@ -99,16 +99,24 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
 
   return (
     <div className="card">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Add New Card</h2>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+            <Save className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Card</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Create a new Magic: The Gathering card</p>
+          </div>
+        </div>
       </div>
 
-
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <div className="form-group">
-              <label htmlFor="name" className="form-label">
+              <label htmlFor="name" className="form-label flex items-center gap-2">
+                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
                 Card Name *
               </label>
               <input
@@ -117,14 +125,15 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="form-input"
+                className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 required
                 placeholder="Enter card name"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="mana_cost" className="form-label">
+              <label htmlFor="mana_cost" className="form-label flex items-center gap-2">
+                <span className="text-yellow-500">⚡</span>
                 Mana Cost
               </label>
               <input
@@ -133,18 +142,20 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 name="mana_cost"
                 value={formData.mana_cost}
                 onChange={handleInputChange}
-                className="form-input"
+                className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="e.g., {2}{W}{W} or {W/U}{U/B}"
               />
-              <div className="text-sm text-gray-500 mt-1">
-                Use {'{W}'}, {'{U}'}, {'{B}'}, {'{R}'}, {'{G}'} for colored mana, {'{1}'}, {'{2}'}, etc. for generic
-                <br />
-                Use {'{W/U}'}, {'{U/B}'}, {'{B/R}'}, {'{R/G}'}, {'{G/W}'} for hybrid mana
+              <div className="text-sm text-gray-500 mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="font-medium mb-1">Mana Cost Format:</div>
+                <div>• Use {'{W}'}, {'{U}'}, {'{B}'}, {'{R}'}, {'{G}'} for colored mana</div>
+                <div>• Use {'{1}'}, {'{2}'}, etc. for generic mana</div>
+                <div>• Use {'{W/U}'}, {'{U/B}'}, etc. for hybrid mana</div>
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="type_line" className="form-label">
+              <label htmlFor="type_line" className="form-label flex items-center gap-2">
+                <span className="text-blue-500">🏷️</span>
                 Type Line
               </label>
               <input
@@ -153,13 +164,14 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 name="type_line"
                 value={formData.type_line}
                 onChange={handleInputChange}
-                className="form-input"
+                className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="e.g., Creature — Human Knight"
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="text" className="form-label">
+              <label htmlFor="text" className="form-label flex items-center gap-2">
+                <span className="text-green-500">📝</span>
                 Card Text
               </label>
               <textarea
@@ -167,7 +179,7 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 name="text"
                 value={formData.text}
                 onChange={handleInputChange}
-                className="form-input form-textarea"
+                className="form-input form-textarea focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="Enter card rules text"
                 rows={6}
               />
@@ -176,25 +188,29 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
 
           <div>
             <div className="form-group">
-              <label className="form-label">Colors</label>
-              <div className="space-y-2">
+              <label className="form-label flex items-center gap-2">
+                <span className="text-purple-500">🎨</span>
+                Colors
+              </label>
+              <div className="space-y-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 {availableColors.map(({ value, label, symbol }) => (
-                  <label key={value} className="flex items-center gap-3">
+                  <label key={value} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.colors.includes(value)}
                       onChange={() => handleColorChange(value)}
-                      className="rounded border-gray-300"
+                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                     />
-                    <div className={`color-indicator color-${value}`}></div>
-                    <span className="text-sm">{label} ({symbol})</span>
+                    <div className={`color-indicator color-${value} w-6 h-6 border-2`}></div>
+                    <span className="text-sm font-medium">{label} ({symbol})</span>
                   </label>
                 ))}
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="rarity" className="form-label">
+              <label htmlFor="rarity" className="form-label flex items-center gap-2">
+                <span className="text-yellow-500">⭐</span>
                 Rarity
               </label>
               <select
@@ -202,7 +218,7 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 name="rarity"
                 value={formData.rarity}
                 onChange={handleInputChange}
-                className="form-select"
+                className="form-select focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               >
                 {rarityOptions.map(({ value, label }) => (
                   <option key={value} value={value}>{label}</option>
@@ -211,7 +227,8 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="archetype_id" className="form-label">
+              <label htmlFor="archetype_id" className="form-label flex items-center gap-2">
+                <span className="text-indigo-500">🏛️</span>
                 Archetype (optional)
               </label>
               <select
@@ -219,7 +236,7 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 name="archetype_id"
                 value={formData.archetype_id}
                 onChange={handleInputChange}
-                className="form-select"
+                className="form-select focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
               >
                 <option value="">None</option>
                 {archetypeOptions.map(({ value, label }) => (
@@ -230,7 +247,8 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label htmlFor="power" className="form-label">
+                <label htmlFor="power" className="form-label flex items-center gap-2">
+                  <span className="text-red-500">⚔️</span>
                   Power
                 </label>
                 <input
@@ -239,13 +257,14 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                   name="power"
                   value={formData.power}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="*"
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="toughness" className="form-label">
+                <label htmlFor="toughness" className="form-label flex items-center gap-2">
+                  <span className="text-blue-500">🛡️</span>
                   Toughness
                 </label>
                 <input
@@ -254,35 +273,37 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                   name="toughness"
                   value={formData.toughness}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="form-input focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                   placeholder="*"
                 />
               </div>
             </div>
 
             {/* Card Preview */}
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                <Eye size={18} />
-                Live Preview
-              </h3>
-              <div className={`border-2 rounded-xl p-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg transition-all duration-300 ${
-                formData.rarity === 'mythic' ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-yellow-100' :
-                formData.rarity === 'rare' ? 'border-gold-400 bg-gradient-to-br from-gold-50 to-gold-100' :
-                formData.rarity === 'uncommon' ? 'border-silver-400 bg-gradient-to-br from-silver-50 to-silver-100' :
-                'border-gray-300'
+            <div className="mt-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                  <Eye className="w-4 h-4 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Live Preview</h3>
+              </div>
+              <div className={`card-preview ${
+                formData.rarity === 'mythic' ? 'card-preview-mythic' :
+                formData.rarity === 'rare' ? 'card-preview-rare' :
+                formData.rarity === 'uncommon' ? 'card-preview-uncommon' :
+                'card-preview-common'
               }`}>
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold">{formData.name || 'Card Name'}</h4>
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-mono">
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="font-bold text-lg text-gray-900 dark:text-white">{formData.name || 'Card Name'}</h4>
+                  <div className="flex items-center gap-3">
+                    <div className="text-sm font-mono bg-white dark:bg-gray-800 px-2 py-1 rounded border">
                       {formData.mana_cost || '{cost}'}
                     </div>
-                    <div className={`px-2 py-1 rounded text-xs font-medium ${
-                      formData.rarity === 'mythic' ? 'bg-yellow-100 text-yellow-800' :
-                      formData.rarity === 'rare' ? 'bg-gold-100 text-gold-800' :
-                      formData.rarity === 'uncommon' ? 'bg-silver-100 text-silver-800' :
-                      'bg-gray-100 text-gray-800'
+                    <div className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${
+                      formData.rarity === 'mythic' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                      formData.rarity === 'rare' ? 'bg-orange-100 text-orange-800 border border-orange-200' :
+                      formData.rarity === 'uncommon' ? 'bg-gray-100 text-gray-800 border border-gray-200' :
+                      'bg-gray-100 text-gray-600 border border-gray-200'
                     }`}>
                       {formData.rarity}
                     </div>
@@ -290,20 +311,22 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
                 </div>
                 
                 {formData.type_line && (
-                  <div className="text-sm text-gray-600 mb-2">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-3 font-medium italic">
                     {formData.type_line}
                   </div>
                 )}
                 
                 {formData.text && (
-                  <div className="text-sm mb-2">
+                  <div className="text-sm mb-3 leading-relaxed text-gray-700 dark:text-gray-300">
                     {formData.text}
                   </div>
                 )}
                 
                 {formData.power && formData.toughness && (
-                  <div className="text-right text-sm font-mono">
-                    {formData.power}/{formData.toughness}
+                  <div className="text-right">
+                    <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded-full text-sm font-bold text-gray-800 dark:text-gray-200">
+                      {formData.power}/{formData.toughness}
+                    </div>
                   </div>
                 )}
               </div>
@@ -311,7 +334,7 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="button"
             onClick={() => setFormData({
@@ -324,22 +347,27 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
               colors: [],
               rarity: 'common'
             })}
-            className="btn btn-secondary"
+            className="group relative inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
           >
-            <X size={20} />
-            Clear
+            <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
+            Clear Form
           </button>
           <button
             type="submit"
-            className="btn btn-primary"
+            className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             disabled={loading}
           >
             {loading ? (
-              <div className="spinner w-4 h-4"></div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Creating Card...
+              </div>
             ) : (
-              <Save size={20} />
+              <div className="flex items-center">
+                <Save className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+                Create Card
+              </div>
             )}
-            {loading ? 'Creating...' : 'Create Card'}
           </button>
         </div>
       </form>

@@ -139,30 +139,31 @@ const SetEditor = ({ onSetUpdated }) => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
-            {tabs.map(({ id: tabId, label, icon: Icon }) => (
+      {/* Professional Tab Navigation */}
+      <div className="mb-8">
+        <div className="tab-navigation">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
               <button
-                key={tabId}
-                onClick={() => setActiveTab(tabId)}
-                className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === tabId
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`tab-button ${isActive ? 'active' : ''}`}
               >
-                <Icon size={20} />
-                {label}
+                <Icon 
+                  size={20} 
+                  className="tab-icon"
+                />
+                <span className="hidden sm:inline">{tab.label}</span>
               </button>
-            ))}
-          </nav>
+            );
+          })}
         </div>
       </div>
 
       {/* Tab Content */}
-      <div>
+      <div className="min-h-[600px]">
         {activeTab === 'cards' && (
           <CardList
             cards={set.cards}
