@@ -37,10 +37,16 @@ class CustomSet(db.Model):
     green_cards = db.Column(db.Integer, default=0)
     colorless_cards = db.Column(db.Integer, default=0)
     multicolor_cards = db.Column(db.Integer, default=0)
+    # Lands configuration
+    lands_cards = db.Column(db.Integer, default=0)
+    basic_lands_cards = db.Column(db.Integer, default=0)
 
     # Relationships
     cards = db.relationship(
         "Card", backref="custom_set", lazy=True, cascade="all, delete-orphan"
+    )
+    archetypes = db.relationship(
+        "Archetype", backref="custom_set", lazy=True, cascade="all, delete-orphan"
     )
 
 
@@ -55,6 +61,16 @@ class Card(db.Model):
     colors = db.Column(db.String(20))  # JSON string of colors
     rarity = db.Column(db.String(20), default="common")
     set_id = db.Column(db.Integer, db.ForeignKey("custom_set.id"), nullable=False)
+    archetype_id = db.Column(db.Integer, db.ForeignKey("archetype.id"))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Archetype(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    set_id = db.Column(db.Integer, db.ForeignKey("custom_set.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    color_pair = db.Column(db.String(10), nullable=False)  # e.g., "WU", "UB", etc.
+    description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -78,6 +94,8 @@ def get_sets():
                 "green_cards": s.green_cards,
                 "colorless_cards": s.colorless_cards,
                 "multicolor_cards": s.multicolor_cards,
+                "lands_cards": s.lands_cards,
+                "basic_lands_cards": s.basic_lands_cards,
                 "card_count": len(s.cards),
             }
             for s in sets
@@ -100,6 +118,8 @@ def create_set():
         green_cards=data.get("green_cards", 0),
         colorless_cards=data.get("colorless_cards", 0),
         multicolor_cards=data.get("multicolor_cards", 0),
+        lands_cards=data.get("lands_cards", 0),
+        basic_lands_cards=data.get("basic_lands_cards", 0),
     )
 
     db.session.add(new_set)
@@ -122,6 +142,7 @@ def create_set():
 def get_set(set_id):
     custom_set = CustomSet.query.get_or_404(set_id)
     cards = Card.query.filter_by(set_id=set_id).all()
+    archetypes = Archetype.query.filter_by(set_id=set_id).all()
 
     return jsonify(
         {
@@ -138,6 +159,17 @@ def get_set(set_id):
             "green_cards": custom_set.green_cards,
             "colorless_cards": custom_set.colorless_cards,
             "multicolor_cards": custom_set.multicolor_cards,
+            "lands_cards": custom_set.lands_cards,
+            "basic_lands_cards": custom_set.basic_lands_cards,
+            "archetypes": [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "color_pair": a.color_pair,
+                    "description": a.description or "",
+                }
+                for a in archetypes
+            ],
             "cards": [
                 {
                     "id": card.id,
@@ -149,6 +181,17 @@ def get_set(set_id):
                     "toughness": card.toughness,
                     "colors": json.loads(card.colors) if card.colors else [],
                     "rarity": card.rarity,
+                    "archetype": (
+                        (
+                            lambda at: {
+                                "id": at.id,
+                                "name": at.name,
+                                "color_pair": at.color_pair,
+                            }
+                        )(Archetype.query.get(card.archetype_id))
+                        if card.archetype_id
+                        else None
+                    ),
                     "created_at": card.created_at.isoformat(),
                 }
                 for card in cards
@@ -173,6 +216,10 @@ def update_set(set_id):
     custom_set.colorless_cards = data.get("colorless_cards", custom_set.colorless_cards)
     custom_set.multicolor_cards = data.get(
         "multicolor_cards", custom_set.multicolor_cards
+    )
+    custom_set.lands_cards = data.get("lands_cards", custom_set.lands_cards)
+    custom_set.basic_lands_cards = data.get(
+        "basic_lands_cards", custom_set.basic_lands_cards
     )
 
     db.session.commit()
@@ -258,6 +305,7 @@ def create_card(set_id):
         colors=json.dumps(colors),
         rarity=data.get("rarity", "common"),
         set_id=set_id,
+        archetype_id=data.get("archetype_id"),
     )
 
     db.session.add(new_card)
@@ -302,6 +350,7 @@ def update_card(card_id):
     card.toughness = data.get("toughness", card.toughness)
     card.colors = json.dumps(colors)
     card.rarity = data.get("rarity", card.rarity)
+    card.archetype_id = data.get("archetype_id", card.archetype_id)
 
     db.session.commit()
 
@@ -371,6 +420,8 @@ def get_number_crunch(set_id):
                 "green_cards": custom_set.green_cards,
                 "colorless_cards": custom_set.colorless_cards,
                 "multicolor_cards": custom_set.multicolor_cards,
+                "lands_cards": custom_set.lands_cards,
+                "basic_lands_cards": custom_set.basic_lands_cards,
             },
             "actual_distribution": {
                 "total_cards": total_cards,
@@ -391,5 +442,99 @@ def get_number_crunch(set_id):
 
 if __name__ == "__main__":
     with app.app_context():
+        # Ensure tables exist
         db.create_all()
+        # Lightweight migration: add new columns if missing
+        from sqlalchemy import text
+
+        try:
+            with db.engine.connect() as conn:
+                # Check existing columns on custom_set
+                result = conn.execute(text("PRAGMA table_info(custom_set);"))
+                existing_cols = {row[1] for row in result}
+                if "lands_cards" not in existing_cols:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE custom_set ADD COLUMN lands_cards INTEGER DEFAULT 0"
+                        )
+                    )
+                if "basic_lands_cards" not in existing_cols:
+                    conn.execute(
+                        text(
+                            "ALTER TABLE custom_set ADD COLUMN basic_lands_cards INTEGER DEFAULT 0"
+                        )
+                    )
+                # Add archetype_id to card if missing
+                result2 = conn.execute(text("PRAGMA table_info(card);"))
+                existing_card_cols = {row[1] for row in result2}
+                if "archetype_id" not in existing_card_cols:
+                    conn.execute(
+                        text("ALTER TABLE card ADD COLUMN archetype_id INTEGER")
+                    )
+        except Exception as e:
+            # Log and continue; app can still run even if migration fails
+            print(f"Startup migration warning: {e}")
     app.run(debug=True, port=5000)
+
+
+# Archetype endpoints
+@app.route("/api/sets/<int:set_id>/archetypes", methods=["GET"])
+def list_archetypes(set_id):
+    CustomSet.query.get_or_404(set_id)
+    archetypes = Archetype.query.filter_by(set_id=set_id).all()
+    return jsonify(
+        [
+            {
+                "id": a.id,
+                "name": a.name,
+                "color_pair": a.color_pair,
+                "description": a.description or "",
+            }
+            for a in archetypes
+        ]
+    )
+
+
+@app.route("/api/sets/<int:set_id>/archetypes", methods=["POST"])
+def create_archetype(set_id):
+    CustomSet.query.get_or_404(set_id)
+    data = request.get_json()
+    new_arch = Archetype(
+        set_id=set_id,
+        name=data["name"],
+        color_pair=data["color_pair"],
+        description=data.get("description", ""),
+    )
+    db.session.add(new_arch)
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "id": new_arch.id,
+                "name": new_arch.name,
+                "color_pair": new_arch.color_pair,
+                "description": new_arch.description or "",
+                "message": "Archetype created successfully",
+            }
+        ),
+        201,
+    )
+
+
+@app.route("/api/archetypes/<int:archetype_id>", methods=["PUT"])
+def update_archetype(archetype_id):
+    arch = Archetype.query.get_or_404(archetype_id)
+    data = request.get_json()
+    arch.name = data.get("name", arch.name)
+    arch.color_pair = data.get("color_pair", arch.color_pair)
+    arch.description = data.get("description", arch.description)
+    db.session.commit()
+    return jsonify({"message": "Archetype updated successfully"})
+
+
+@app.route("/api/archetypes/<int:archetype_id>", methods=["DELETE"])
+def delete_archetype(archetype_id):
+    arch = Archetype.query.get_or_404(archetype_id)
+    db.session.delete(arch)
+    db.session.commit()
+    return jsonify({"message": "Archetype deleted successfully"})

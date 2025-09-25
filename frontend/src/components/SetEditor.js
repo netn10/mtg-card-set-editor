@@ -166,6 +166,7 @@ const SetEditor = ({ onSetUpdated }) => {
         {activeTab === 'cards' && (
           <CardList
             cards={set.cards}
+            archetypes={set.archetypes || []}
             onCardDeleted={handleCardDeleted}
           />
         )}
@@ -173,6 +174,7 @@ const SetEditor = ({ onSetUpdated }) => {
         {activeTab === 'create' && (
           <CreateCard
             setId={set.id}
+            archetypes={set.archetypes || []}
             onCardCreated={handleCardCreated}
           />
         )}

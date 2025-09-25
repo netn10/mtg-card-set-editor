@@ -15,6 +15,8 @@ const CreateSet = ({ onSetCreated }) => {
     green_cards: 20,
     colorless_cards: 0,
     multicolor_cards: 0,
+    lands_cards: 0,
+    basic_lands_cards: 0,
     // Rarity distribution
     common_cards: 60,
     uncommon_cards: 30,
@@ -46,7 +48,7 @@ const CreateSet = ({ onSetCreated }) => {
   const calculateColorTotal = () => {
     return formData.white_cards + formData.blue_cards + formData.black_cards + 
            formData.red_cards + formData.green_cards + formData.colorless_cards + 
-           formData.multicolor_cards;
+           formData.multicolor_cards + formData.lands_cards + formData.basic_lands_cards;
   };
 
   const calculateRarityTotal = () => {
@@ -91,7 +93,9 @@ const CreateSet = ({ onSetCreated }) => {
     { key: 'red_cards', color: 'red', label: 'Red', symbol: 'R' },
     { key: 'green_cards', color: 'green', label: 'Green', symbol: 'G' },
     { key: 'colorless_cards', color: 'colorless', label: 'Colorless', symbol: 'C' },
-    { key: 'multicolor_cards', color: 'multicolor', label: 'Multicolor', symbol: 'M' }
+    { key: 'multicolor_cards', color: 'multicolor', label: 'Multicolor', symbol: 'M' },
+    { key: 'lands_cards', color: 'lands', label: 'Lands', symbol: 'L' },
+    { key: 'basic_lands_cards', color: 'lands', label: 'Basic Lands', symbol: 'BL' }
   ];
 
 

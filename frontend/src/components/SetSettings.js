@@ -13,12 +13,17 @@ const SetSettings = ({ set, onSetUpdated }) => {
     red_cards: set.red_cards,
     green_cards: set.green_cards,
     colorless_cards: set.colorless_cards,
-    multicolor_cards: set.multicolor_cards
+    multicolor_cards: set.multicolor_cards,
+    lands_cards: set.lands_cards || 0,
+    basic_lands_cards: set.basic_lands_cards || 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [archetypeForm, setArchetypeForm] = useState({ name: '', color_pair: 'WU', description: '' });
+  const [archError, setArchError] = useState('');
+  const [archLoading, setArchLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -70,6 +75,49 @@ const SetSettings = ({ set, onSetUpdated }) => {
     }
   };
 
+  const refreshArchetypes = async () => {
+    try {
+      const res = await fetch(`/api/sets/${set.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        onSetUpdated(data);
+      }
+    } catch {}
+  };
+
+  const handleArchetypeCreate = async (e) => {
+    e.preventDefault();
+    setArchError('');
+    setArchLoading(true);
+    try {
+      const res = await fetch(`/api/sets/${set.id}/archetypes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(archetypeForm)
+      });
+      if (res.ok) {
+        setArchetypeForm({ name: '', color_pair: 'WU', description: '' });
+        await refreshArchetypes();
+      } else {
+        const err = await res.json();
+        setArchError(err.message || 'Failed to create archetype');
+      }
+    } catch (err) {
+      setArchError('Network error. Please try again.');
+    } finally {
+      setArchLoading(false);
+    }
+  };
+
+  const handleArchetypeDelete = async (archId) => {
+    try {
+      const res = await fetch(`/api/archetypes/${archId}`, { method: 'DELETE' });
+      if (res.ok) {
+        await refreshArchetypes();
+      }
+    } catch {}
+  };
+
   const handleDeleteConfirm = async () => {
     try {
       const response = await fetch(`/api/sets/${set.id}`, {
@@ -90,7 +138,7 @@ const SetSettings = ({ set, onSetUpdated }) => {
   const calculateTotal = () => {
     return formData.white_cards + formData.blue_cards + formData.black_cards + 
            formData.red_cards + formData.green_cards + formData.colorless_cards + 
-           formData.multicolor_cards;
+           formData.multicolor_cards + formData.lands_cards + formData.basic_lands_cards;
   };
 
   const colorDistribution = [
@@ -100,7 +148,9 @@ const SetSettings = ({ set, onSetUpdated }) => {
     { key: 'red_cards', color: 'red', label: 'Red', symbol: 'R' },
     { key: 'green_cards', color: 'green', label: 'Green', symbol: 'G' },
     { key: 'colorless_cards', color: 'colorless', label: 'Colorless', symbol: 'C' },
-    { key: 'multicolor_cards', color: 'multicolor', label: 'Multicolor', symbol: 'M' }
+    { key: 'multicolor_cards', color: 'multicolor', label: 'Multicolor', symbol: 'M' },
+    { key: 'lands_cards', color: 'lands', label: 'Lands', symbol: 'L' },
+    { key: 'basic_lands_cards', color: 'lands', label: 'Basic Lands', symbol: 'BL' }
   ];
 
   const currentTotal = calculateTotal();
@@ -225,6 +275,48 @@ const SetSettings = ({ set, onSetUpdated }) => {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Archetypes */}
+      <div className="card">
+        <h3 className="text-xl font-semibold mb-4">Archetypes (two-color pairs)</h3>
+        {archError && <div className="error-state mb-4">{archError}</div>}
+        <form onSubmit={handleArchetypeCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+          <div className="form-group">
+            <label className="form-label" htmlFor="arch_name">Name</label>
+            <input id="arch_name" className="form-input" value={archetypeForm.name} onChange={e=>setArchetypeForm({...archetypeForm, name:e.target.value})} placeholder="e.g., WU Flyers" required />
+          </div>
+          <div className="form-group">
+            <label className="form-label" htmlFor="arch_pair">Color Pair</label>
+            <select id="arch_pair" className="form-select" value={archetypeForm.color_pair} onChange={e=>setArchetypeForm({...archetypeForm, color_pair:e.target.value})}>
+              {['WU','UB','BR','RG','GW','WB','UR','BG','RW','GU'].map(p=> (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group md:col-span-2">
+            <label className="form-label" htmlFor="arch_desc">Description</label>
+            <input id="arch_desc" className="form-input" value={archetypeForm.description} onChange={e=>setArchetypeForm({...archetypeForm, description:e.target.value})} placeholder="Short description" />
+          </div>
+          <div className="md:col-span-4 flex justify-end">
+            <button className="btn btn-primary" disabled={archLoading}>{archLoading ? 'Adding...' : 'Add Archetype'}</button>
+          </div>
+        </form>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {(set.archetypes || []).map(a => (
+            <div key={a.id} className="border rounded p-3 flex items-start justify-between">
+              <div>
+                <div className="font-semibold">{a.color_pair} — {a.name}</div>
+                {a.description && (<div className="text-sm text-gray-600 mt-1">{a.description}</div>)}
+              </div>
+              <button className="btn btn-danger btn-sm" onClick={()=>handleArchetypeDelete(a.id)}>Delete</button>
+            </div>
+          ))}
+          {(set.archetypes || []).length === 0 && (
+            <div className="text-sm text-gray-600">No archetypes yet. Add one above.</div>
+          )}
+        </div>
       </div>
 
       {/* Set Statistics */}

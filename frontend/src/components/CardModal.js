@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X } from 'lucide-react';
 
-const CardModal = ({ card, isOpen, onClose, onCardUpdated }) => {
+const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) => {
   const [formData, setFormData] = useState({
     name: '',
     mana_cost: '',
@@ -10,7 +10,8 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated }) => {
     power: '',
     toughness: '',
     colors: [],
-    rarity: 'common'
+    rarity: 'common',
+    archetype_id: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -41,7 +42,8 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated }) => {
         power: card.power || '',
         toughness: card.toughness || '',
         colors: card.colors || [],
-        rarity: card.rarity || 'common'
+        rarity: card.rarity || 'common',
+        archetype_id: card.archetype?.id || ''
       });
     }
   }, [card]);
@@ -70,12 +72,16 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated }) => {
     setSuccess(false);
 
     try {
+      const payload = { ...formData };
+      if (!payload.archetype_id) {
+        delete payload.archetype_id;
+      }
       const response = await fetch(`/api/cards/${card.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
@@ -105,6 +111,8 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated }) => {
   };
 
   if (!isOpen || !card) return null;
+
+  const archetypeOptions = archetypes.map(a => ({ value: a.id, label: `${a.color_pair} — ${a.name}` }));
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -229,6 +237,24 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated }) => {
                       className="form-select"
                     >
                       {rarityOptions.map(({ value, label }) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="archetype_id" className="form-label">
+                      Archetype (optional)
+                    </label>
+                    <select
+                      id="archetype_id"
+                      name="archetype_id"
+                      value={formData.archetype_id}
+                      onChange={handleInputChange}
+                      className="form-select"
+                    >
+                      <option value="">None</option>
+                      {archetypeOptions.map(({ value, label }) => (
                         <option key={value} value={value}>{label}</option>
                       ))}
                     </select>

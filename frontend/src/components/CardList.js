@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, Eye } from 'lucide-react';
+import { Edit, Trash2, Eye, Grid as GridIcon, List as ListIcon } from 'lucide-react';
 import CardModal from './CardModal';
 import DeleteCardModal from './DeleteCardModal';
 
-const CardList = ({ cards, onCardDeleted }) => {
+const CardList = ({ cards, archetypes = [], onCardDeleted }) => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState(null);
+  const [viewMode, setViewMode] = useState('grid');
 
   const handleDeleteClick = (card) => {
     setCardToDelete(card);
@@ -91,100 +92,178 @@ const CardList = ({ cards, onCardDeleted }) => {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-2xl font-bold">Cards ({cards.length})</h2>
+        <div className="flex items-center gap-2">
+          <button
+            className={`btn btn-secondary btn-sm ${viewMode === 'grid' ? 'font-bold' : ''}`}
+            onClick={() => setViewMode('grid')}
+            title="Grid view"
+          >
+            <GridIcon size={16} /> Grid
+          </button>
+          <button
+            className={`btn btn-secondary btn-sm ${viewMode === 'list' ? 'font-bold' : ''}`}
+            onClick={() => setViewMode('list')}
+            title="List view"
+          >
+            <ListIcon size={16} /> List
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {cards.map((card) => (
-          <div key={card.id} className={`card border-2 ${getRarityBorderClass(card.rarity)}`}>
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold">{card.name}</h3>
-                <div className={`inline-block px-2 py-1 rounded text-xs font-medium mt-1 ${getRarityBadgeClass(card.rarity)}`}>
-                  {card.rarity}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {cards.map((card) => (
+            <div key={card.id} className={`card border-2 ${getRarityBorderClass(card.rarity)}`}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold">{card.name}</h3>
+                  <div className={`inline-block px-2 py-1 rounded text-xs font-medium mt-1 ${getRarityBadgeClass(card.rarity)}`}>
+                    {card.rarity}
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setSelectedCard(card)}
+                    className="btn btn-sm btn-secondary"
+                    title="View Card"
+                  >
+                    <Eye size={14} />
+                  </button>
+                  <button
+                    onClick={() => setSelectedCard({ ...card, isEditing: true })}
+                    className="btn btn-sm btn-secondary"
+                    title="Edit Card"
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(card)}
+                    className="btn btn-sm btn-danger"
+                    title="Delete Card"
+                  >
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => setSelectedCard(card)}
-                  className="btn btn-sm btn-secondary"
-                  title="View Card"
-                >
-                  <Eye size={14} />
-                </button>
-                <button
-                  onClick={() => setSelectedCard({ ...card, isEditing: true })}
-                  className="btn btn-sm btn-secondary"
-                  title="Edit Card"
-                >
-                  <Edit size={14} />
-                </button>
-                <button
-                  onClick={() => handleDeleteClick(card)}
-                  className="btn btn-sm btn-danger"
-                  title="Delete Card"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Cost:</span>
-                <span className="font-mono text-sm">
-                  {formatManaCost(card.mana_cost)}
-                </span>
-              </div>
-
-              {card.type_line && (
+              <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">Type:</span>
-                  <span className="text-sm">{card.type_line}</span>
-                </div>
-              )}
-
-              {card.power && card.toughness && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">P/T:</span>
+                  <span className="text-sm text-gray-500">Cost:</span>
                   <span className="font-mono text-sm">
-                    {card.power}/{card.toughness}
+                    {formatManaCost(card.mana_cost)}
                   </span>
                 </div>
+
+                {card.type_line && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">Type:</span>
+                    <span className="text-sm">{card.type_line}</span>
+                  </div>
+                )}
+
+                {card.power && card.toughness && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">P/T:</span>
+                    <span className="font-mono text-sm">
+                      {card.power}/{card.toughness}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Colors:</span>
+                  <div className="flex gap-1">
+                    {card.colors && card.colors.length > 0 ? (
+                      card.colors.map((color, index) => (
+                        <div
+                          key={index}
+                          className={`color-indicator color-${color}`}
+                        ></div>
+                      ))
+                    ) : (
+                      <div className="color-indicator color-colorless"></div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {card.text && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="text-sm text-gray-600 line-clamp-3">
+                    {card.text}
+                  </div>
+                </div>
               )}
-
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">Colors:</span>
-                <div className="flex gap-1">
-                  {card.colors && card.colors.length > 0 ? (
-                    card.colors.map((color, index) => (
-                      <div
-                        key={index}
-                        className={`color-indicator color-${color}`}
-                      ></div>
-                    ))
-                  ) : (
-                    <div className="color-indicator color-colorless"></div>
-                  )}
-                </div>
-              </div>
             </div>
-
-            {card.text && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="text-sm text-gray-600 line-clamp-3">
-                  {card.text}
+          ))}
+        </div>
+      ) : (
+        <div className="card">
+          <div className="grid grid-cols-4 gap-4 mb-2 text-sm text-gray-600">
+            <div>Name</div>
+            <div>Type</div>
+            <div>Cost / Colors</div>
+            <div className="text-right">Actions</div>
+          </div>
+          <div className="space-y-2">
+            {cards.map((card) => (
+              <div key={card.id} className={`flex items-center justify-between p-4 ${getRarityBorderClass(card.rarity)}`}>
+                <div className="grid grid-cols-4 gap-4 flex-1 items-center">
+                  <div>
+                    <div className="font-medium">{card.name}</div>
+                    <div className={`inline-block px-2 py-0.5 rounded text-xs mt-1 ${getRarityBadgeClass(card.rarity)}`}>
+                      {card.rarity}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-700">{card.type_line || '-'}</div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm">{formatManaCost(card.mana_cost)}</span>
+                    <div className="flex gap-1">
+                      {card.colors && card.colors.length > 0 ? (
+                        card.colors.map((color, index) => (
+                          <div key={index} className={`color-indicator color-${color}`}></div>
+                        ))
+                      ) : (
+                        <div className="color-indicator color-colorless"></div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 justify-end">
+                    <button
+                      onClick={() => setSelectedCard(card)}
+                      className="btn btn-sm btn-secondary"
+                      title="View Card"
+                    >
+                      <Eye size={14} />
+                    </button>
+                    <button
+                      onClick={() => setSelectedCard({ ...card, isEditing: true })}
+                      className="btn btn-sm btn-secondary"
+                      title="Edit Card"
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(card)}
+                      className="btn btn-sm btn-danger"
+                      title="Delete Card"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
 
       <CardModal
         card={selectedCard}
         isOpen={!!selectedCard}
         onClose={() => setSelectedCard(null)}
         onCardUpdated={onCardDeleted}
+        archetypes={archetypes}
       />
 
       <DeleteCardModal
