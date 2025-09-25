@@ -10,10 +10,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-secondary);
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
   color: var(--text-primary);
-  line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  line-height: 1.7;
+  transition: all 0.3s ease;
+  min-height: 100vh;
 }
 
 code {
@@ -35,12 +36,15 @@ code {
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   --bg-tertiary: #f1f5f9;
-  --text-primary: #1a202c;
-  --text-secondary: #4a5568;
-  --text-tertiary: #718096;
+  --bg-quaternary: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
   --border-primary: #e2e8f0;
   --border-secondary: #cbd5e0;
-  --shadow: rgba(0, 0, 0, 0.1);
+  --border-tertiary: #94a3b8;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --shadow-lg: rgba(0, 0, 0, 0.15);
   
   /* Light mode grays */
   --gray-50: #f9fafb;
@@ -70,12 +74,15 @@ code {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
+  --bg-quaternary: #475569;
   --text-primary: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-tertiary: #94a3b8;
   --border-primary: #334155;
   --border-secondary: #475569;
+  --border-tertiary: #64748b;
   --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-lg: rgba(0, 0, 0, 0.5);
   
   /* Dark mode grays - inverted */
   --gray-50: #1f2937;
@@ -106,33 +113,61 @@ code {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.75rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover::before {
+  left: 100%;
+}
+
+.btn:active {
+  transform: translateY(1px);
 }
 
 .btn-primary {
-  background-color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
 }
 
 .btn-secondary {
-  background-color: var(--border-primary);
+  background: linear-gradient(135deg, var(--border-primary) 0%, var(--bg-tertiary) 100%);
   color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
 }
 
 .btn-secondary:hover {
-  background-color: var(--border-secondary);
+  background: linear-gradient(135deg, var(--border-secondary) 0%, var(--bg-tertiary) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .btn-success {
@@ -165,12 +200,36 @@ code {
 
 .card {
   background: var(--bg-primary);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 var(--shadow), 0 1px 2px 0 var(--shadow);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid var(--border-primary);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--success), var(--warning));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 .form-group {
@@ -187,19 +246,26 @@ code {
 
 .form-input {
   width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border-primary);
-  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-primary);
+  border-radius: 0.75rem;
   font-size: 0.875rem;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .form-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-light);
+  box-shadow: 0 0 0 4px var(--primary-light), 0 4px 15px rgba(59, 130, 246, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-input:hover {
+  border-color: var(--border-secondary);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
 }
 
 .form-textarea {
@@ -253,14 +319,30 @@ code {
 .gap-4 { gap: 1rem; }
 
 .text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
 .text-sm { font-size: 0.875rem; }
+.text-base { font-size: 1rem; }
 .text-lg { font-size: 1.125rem; }
 .text-xl { font-size: 1.25rem; }
 .text-2xl { font-size: 1.5rem; }
 .text-3xl { font-size: 1.875rem; }
+.text-4xl { font-size: 2.25rem; }
+.text-5xl { font-size: 3rem; }
 
-.font-bold { font-weight: 700; }
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
 .font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+.font-black { font-weight: 900; }
+
+.leading-tight { line-height: 1.25; }
+.leading-snug { line-height: 1.375; }
+.leading-normal { line-height: 1.5; }
+.leading-relaxed { line-height: 1.625; }
+.leading-loose { line-height: 2; }
 
 .text-gray-500 { color: var(--text-tertiary); }
 .text-gray-600 { color: var(--text-secondary); }
@@ -362,6 +444,34 @@ code {
 /* Margin utilities */
 .mb-0 { margin-bottom: 0; }
 
+/* Animation utilities */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
 /* Additional dark mode utilities */
 .bg-gray-50 { background-color: var(--gray-50); }
 .bg-gray-100 { background-color: var(--gray-100); }
@@ -398,10 +508,297 @@ td {
   background-color: transparent;
 }
 
+/* MTG Card Styles */
+.mtg-card {
+  font-family: 'Beleren Small Caps', 'Matrix Bold', 'Arial Black', sans-serif;
+}
+
+.mtg-card:hover .card-actions {
+  opacity: 1 !important;
+}
+
+.mana-cost {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.mana-cost-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border: 1px solid #9ca3af;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: bold;
+  color: #374151;
+}
+
+.mana-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: 1px solid;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: bold;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+.rarity-badge {
+  font-family: 'Arial', sans-serif;
+}
+
+.rarity-mythic {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #92400e;
+  border: 1px solid #d97706;
+}
+
+.rarity-rare {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #92400e;
+  border: 1px solid #b45309;
+}
+
+.rarity-uncommon {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  color: #f9fafb;
+  border: 1px solid #4b5563;
+}
+
+.rarity-common {
+  background: linear-gradient(135deg, #d1d5db 0%, #9ca3af 100%);
+  color: #374151;
+  border: 1px solid #6b7280;
+}
+
+/* Dark mode adjustments for MTG cards */
+.dark .mtg-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.dark .mtg-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+}
+
+/* MTG Grid Responsive Styles */
+.mtg-grid-container {
+  display: grid;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.mtg-grid-container {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Empty Grid Spot Styles */
+.empty-grid-spot {
+  width: 200px;
+  height: 280px;
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.empty-grid-spot:hover {
+  border-color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.empty-grid-spot-content {
+  text-align: center;
+  color: #6b7280;
+}
+
+.empty-grid-spot-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.empty-grid-spot-label {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+
+.empty-grid-spot-color {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Color-specific styling for empty grid spots */
+.empty-grid-spot-white {
+  border-color: #fbbf24;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.empty-grid-spot-blue {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+}
+
+.empty-grid-spot-black {
+  border-color: #6b7280;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+}
+
+.empty-grid-spot-red {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+.empty-grid-spot-green {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.empty-grid-spot-colorless {
+  border-color: #9ca3af;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.empty-grid-spot-multicolor {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+}
+
+.empty-grid-spot-land {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.empty-grid-spot-basic-land {
+  border-color: #84cc16;
+  background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%);
+}
+
+/* Dark mode for empty grid spots */
+.dark .empty-grid-spot {
+  border-color: #4b5563;
+  background: #1f2937;
+}
+
+.dark .empty-grid-spot:hover {
+  border-color: #6b7280;
+  background: #374151;
+}
+
+.dark .empty-grid-spot-number {
+  color: #d1d5db;
+}
+
+.dark .empty-grid-spot-label {
+  color: #6b7280;
+}
+
+/* Dark mode color-specific styling */
+.dark .empty-grid-spot-white {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+}
+
+.dark .empty-grid-spot-blue {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+}
+
+.dark .empty-grid-spot-black {
+  border-color: #4b5563;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+.dark .empty-grid-spot-red {
+  border-color: #dc2626;
+  background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+}
+
+.dark .empty-grid-spot-green {
+  border-color: #059669;
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+}
+
+.dark .empty-grid-spot-colorless {
+  border-color: #6b7280;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+}
+
+.dark .empty-grid-spot-multicolor {
+  border-color: #7c3aed;
+  background: linear-gradient(135deg, #581c87 0%, #6b21a8 100%);
+}
+
+.dark .empty-grid-spot-land {
+  border-color: #d97706;
+  background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+}
+
+.dark .empty-grid-spot-basic-land {
+  border-color: #65a30d;
+  background: linear-gradient(135deg, #365314 0%, #4d7c0f 100%);
+}
+
 /* Responsive */
+@media (max-width: 1200px) {
+  .mtg-grid-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   .grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
   .grid-cols-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid-cols-5 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  
+  .mtg-grid-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .mtg-card {
+    width: 200px !important;
+    height: 280px !important;
+  }
+  
+  .empty-grid-spot {
+    width: 200px !important;
+    height: 280px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .mtg-card {
+    width: 160px !important;
+    height: 224px !important;
+  }
+  
+  .empty-grid-spot {
+    width: 160px !important;
+    height: 224px !important;
+  }
+  
+  .empty-grid-spot-number {
+    font-size: 1.5rem !important;
+  }
+  
+  .mana-symbol, .mana-cost-number {
+    width: 12px !important;
+    height: 12px !important;
+    font-size: 8px !important;
+  }
 }

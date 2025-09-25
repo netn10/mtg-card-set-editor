@@ -167,6 +167,8 @@ const SetEditor = ({ onSetUpdated }) => {
           <CardList
             cards={set.cards}
             archetypes={set.archetypes || []}
+            totalCards={set.total_cards}
+            colorDistribution={set}
             onCardDeleted={handleCardDeleted}
           />
         )}

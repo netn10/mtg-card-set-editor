@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Plus, Settings, BarChart3, CreditCard } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import SetList from './components/SetList';
 import SetEditor from './components/SetEditor';
 import CreateSet from './components/CreateSet';
@@ -42,67 +43,69 @@ function App() {
 
   return (
     <ThemeProvider>
-      <Router>
-        <div className="App">
-          <header className="app-header">
-            <div className="container">
-              <div className="flex items-center justify-between">
-                <Link to="/" className="logo">
-                  <CreditCard className="logo-icon" />
-                  <span>MTG Set Editor</span>
-                </Link>
-                <div className="flex items-center gap-4">
-                  <nav className="nav">
-                    <Link to="/" className="nav-link">
-                      <BarChart3 size={20} />
-                      Sets
-                    </Link>
-                    <Link to="/create" className="nav-link">
-                      <Plus size={20} />
-                      New Set
-                    </Link>
-                  </nav>
-                  <ThemeToggle />
+      <NotificationProvider>
+        <Router>
+          <div className="App">
+            <header className="app-header">
+              <div className="container">
+                <div className="flex items-center justify-between">
+                  <Link to="/" className="logo">
+                    <CreditCard className="logo-icon" />
+                    <span>MTG Set Editor</span>
+                  </Link>
+                  <div className="flex items-center gap-4">
+                    <nav className="nav">
+                      <Link to="/" className="nav-link">
+                        <BarChart3 size={20} />
+                        Sets
+                      </Link>
+                      <Link to="/create" className="nav-link">
+                        <Plus size={20} />
+                        New Set
+                      </Link>
+                    </nav>
+                    <ThemeToggle />
+                  </div>
                 </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-        <main className="main-content">
-          <div className="container">
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <SetList 
-                    sets={sets} 
-                    loading={loading} 
-                    onDelete={deleteSet}
-                    onUpdate={fetchSets}
+            <main className="main-content">
+              <div className="container">
+                <Routes>
+                  <Route 
+                    path="/" 
+                    element={
+                      <SetList 
+                        sets={sets} 
+                        loading={loading} 
+                        onDelete={deleteSet}
+                        onUpdate={fetchSets}
+                      />
+                    } 
                   />
-                } 
-              />
-              <Route 
-                path="/create" 
-                element={
-                  <CreateSet 
-                    onSetCreated={addSet}
+                  <Route 
+                    path="/create" 
+                    element={
+                      <CreateSet 
+                        onSetCreated={addSet}
+                      />
+                    } 
                   />
-                } 
-              />
-              <Route 
-                path="/set/:id" 
-                element={
-                  <SetEditor 
-                    onSetUpdated={updateSet}
+                  <Route 
+                    path="/set/:id" 
+                    element={
+                      <SetEditor 
+                        onSetUpdated={updateSet}
+                      />
+                    } 
                   />
-                } 
-              />
-            </Routes>
+                </Routes>
+              </div>
+            </main>
           </div>
-        </main>
-        </div>
-      </Router>
+        </Router>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }

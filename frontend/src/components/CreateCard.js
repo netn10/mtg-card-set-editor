@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Save, X } from 'lucide-react';
+import { useNotification } from '../contexts/NotificationContext';
 
 const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
+  const { showSuccess, showError } = useNotification();
   const [formData, setFormData] = useState({
     name: '',
     mana_cost: '',
@@ -14,8 +16,6 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
     archetype_id: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
 
   const availableColors = [
     { value: 'white', label: 'White', symbol: 'W' },
@@ -52,8 +52,6 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    setSuccess(false);
 
     try {
       const payload = { ...formData };
@@ -69,7 +67,7 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
       });
 
       if (response.ok) {
-        setSuccess(true);
+        showSuccess(`Card "${formData.name}" created successfully!`);
         setFormData({
           name: '',
           mana_cost: '',
@@ -82,22 +80,22 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
           archetype_id: ''
         });
         onCardCreated();
-        
-        // Clear success message after 3 seconds
-        setTimeout(() => setSuccess(false), 3000);
       } else {
         const errorData = await response.json();
-        setError(errorData.message || 'Failed to create card');
+        showError(errorData.message || 'Failed to create card');
       }
     } catch (error) {
-      setError('Network error. Please try again.');
+      showError('Network error. Please try again.');
       console.error('Error creating card:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const archetypeOptions = archetypes.map(a => ({ value: a.id, label: `${a.color_pair} — ${a.name}` }));
+  const archetypeOptions = archetypes.map(a => ({ 
+    value: a.id, 
+    label: `${a.color_pair} — ${a.title || a.name}` 
+  }));
 
   return (
     <div className="card">
@@ -105,17 +103,6 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
         <h2 className="text-2xl font-bold">Add New Card</h2>
       </div>
 
-      {error && (
-        <div className="error-state mb-6">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="success-message">
-          Card created successfully!
-        </div>
-      )}
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -275,11 +262,14 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
 
             {/* Card Preview */}
             <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3">Preview</h3>
-              <div className={`border rounded-lg p-4 bg-gray-50 ${
-                formData.rarity === 'mythic' ? 'border-yellow-400 bg-yellow-50' :
-                formData.rarity === 'rare' ? 'border-gold-400 bg-gold-50' :
-                formData.rarity === 'uncommon' ? 'border-silver-400 bg-silver-50' :
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Eye size={18} />
+                Live Preview
+              </h3>
+              <div className={`border-2 rounded-xl p-6 bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg transition-all duration-300 ${
+                formData.rarity === 'mythic' ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-yellow-100' :
+                formData.rarity === 'rare' ? 'border-gold-400 bg-gradient-to-br from-gold-50 to-gold-100' :
+                formData.rarity === 'uncommon' ? 'border-silver-400 bg-gradient-to-br from-silver-50 to-silver-100' :
                 'border-gray-300'
               }`}>
                 <div className="flex justify-between items-start mb-2">

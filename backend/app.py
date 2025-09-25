@@ -69,7 +69,10 @@ class Archetype(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     set_id = db.Column(db.Integer, db.ForeignKey("custom_set.id"), nullable=False)
     name = db.Column(db.String(100), nullable=False)
-    color_pair = db.Column(db.String(10), nullable=False)  # e.g., "WU", "UB", etc.
+    title = db.Column(db.String(100), nullable=False)  # Display title for the archetype
+    color_pair = db.Column(
+        db.String(10), nullable=False
+    )  # e.g., "WU", "UB", "WUB", etc.
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -440,6 +443,73 @@ def get_number_crunch(set_id):
     )
 
 
+# Archetype endpoints
+@app.route("/api/sets/<int:set_id>/archetypes", methods=["GET"])
+def list_archetypes(set_id):
+    CustomSet.query.get_or_404(set_id)
+    archetypes = Archetype.query.filter_by(set_id=set_id).all()
+    return jsonify(
+        [
+            {
+                "id": a.id,
+                "name": a.name,
+                "title": a.title,
+                "color_pair": a.color_pair,
+                "description": a.description or "",
+            }
+            for a in archetypes
+        ]
+    )
+
+
+@app.route("/api/sets/<int:set_id>/archetypes", methods=["POST"])
+def create_archetype(set_id):
+    CustomSet.query.get_or_404(set_id)
+    data = request.get_json()
+    new_arch = Archetype(
+        set_id=set_id,
+        name=data["name"],
+        title=data.get("title", data["name"]),  # Use name as title if not provided
+        color_pair=data["color_pair"],
+        description=data.get("description", ""),
+    )
+    db.session.add(new_arch)
+    db.session.commit()
+    return (
+        jsonify(
+            {
+                "id": new_arch.id,
+                "name": new_arch.name,
+                "title": new_arch.title,
+                "color_pair": new_arch.color_pair,
+                "description": new_arch.description or "",
+                "message": "Archetype created successfully",
+            }
+        ),
+        201,
+    )
+
+
+@app.route("/api/archetypes/<int:archetype_id>", methods=["PUT"])
+def update_archetype(archetype_id):
+    arch = Archetype.query.get_or_404(archetype_id)
+    data = request.get_json()
+    arch.name = data.get("name", arch.name)
+    arch.title = data.get("title", arch.title)
+    arch.color_pair = data.get("color_pair", arch.color_pair)
+    arch.description = data.get("description", arch.description)
+    db.session.commit()
+    return jsonify({"message": "Archetype updated successfully"})
+
+
+@app.route("/api/archetypes/<int:archetype_id>", methods=["DELETE"])
+def delete_archetype(archetype_id):
+    arch = Archetype.query.get_or_404(archetype_id)
+    db.session.delete(arch)
+    db.session.commit()
+    return jsonify({"message": "Archetype deleted successfully"})
+
+
 if __name__ == "__main__":
     with app.app_context():
         # Ensure tables exist
@@ -471,70 +541,21 @@ if __name__ == "__main__":
                     conn.execute(
                         text("ALTER TABLE card ADD COLUMN archetype_id INTEGER")
                     )
+
+                # Add title column to archetype table if it doesn't exist
+                result3 = conn.execute(text("PRAGMA table_info(archetype);"))
+                existing_archetype_cols = {row[1] for row in result3}
+                if "title" not in existing_archetype_cols:
+                    conn.execute(
+                        text("ALTER TABLE archetype ADD COLUMN title VARCHAR(100)")
+                    )
+                    # Update existing archetypes to use name as title
+                    conn.execute(
+                        text(
+                            "UPDATE archetype SET title = name WHERE title IS NULL OR title = ''"
+                        )
+                    )
         except Exception as e:
             # Log and continue; app can still run even if migration fails
             print(f"Startup migration warning: {e}")
-    app.run(debug=True, port=5000)
-
-
-# Archetype endpoints
-@app.route("/api/sets/<int:set_id>/archetypes", methods=["GET"])
-def list_archetypes(set_id):
-    CustomSet.query.get_or_404(set_id)
-    archetypes = Archetype.query.filter_by(set_id=set_id).all()
-    return jsonify(
-        [
-            {
-                "id": a.id,
-                "name": a.name,
-                "color_pair": a.color_pair,
-                "description": a.description or "",
-            }
-            for a in archetypes
-        ]
-    )
-
-
-@app.route("/api/sets/<int:set_id>/archetypes", methods=["POST"])
-def create_archetype(set_id):
-    CustomSet.query.get_or_404(set_id)
-    data = request.get_json()
-    new_arch = Archetype(
-        set_id=set_id,
-        name=data["name"],
-        color_pair=data["color_pair"],
-        description=data.get("description", ""),
-    )
-    db.session.add(new_arch)
-    db.session.commit()
-    return (
-        jsonify(
-            {
-                "id": new_arch.id,
-                "name": new_arch.name,
-                "color_pair": new_arch.color_pair,
-                "description": new_arch.description or "",
-                "message": "Archetype created successfully",
-            }
-        ),
-        201,
-    )
-
-
-@app.route("/api/archetypes/<int:archetype_id>", methods=["PUT"])
-def update_archetype(archetype_id):
-    arch = Archetype.query.get_or_404(archetype_id)
-    data = request.get_json()
-    arch.name = data.get("name", arch.name)
-    arch.color_pair = data.get("color_pair", arch.color_pair)
-    arch.description = data.get("description", arch.description)
-    db.session.commit()
-    return jsonify({"message": "Archetype updated successfully"})
-
-
-@app.route("/api/archetypes/<int:archetype_id>", methods=["DELETE"])
-def delete_archetype(archetype_id):
-    arch = Archetype.query.get_or_404(archetype_id)
-    db.session.delete(arch)
-    db.session.commit()
-    return jsonify({"message": "Archetype deleted successfully"})
+    app.run(debug=True, host="127.0.0.1", port=5000)

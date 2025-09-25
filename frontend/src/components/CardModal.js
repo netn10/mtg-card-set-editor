@@ -112,7 +112,10 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) =>
 
   if (!isOpen || !card) return null;
 
-  const archetypeOptions = archetypes.map(a => ({ value: a.id, label: `${a.color_pair} — ${a.name}` }));
+  const archetypeOptions = archetypes.map(a => ({ 
+    value: a.id, 
+    label: `${a.color_pair} — ${a.title || a.name}` 
+  }));
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>

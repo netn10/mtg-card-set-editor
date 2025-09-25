@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Save, Trash2 } from 'lucide-react';
+import { Save, Trash2, Edit, Plus } from 'lucide-react';
 import DeleteSetModal from './DeleteSetModal';
+import ArchetypeModal from './ArchetypeModal';
 
 const SetSettings = ({ set, onSetUpdated }) => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,8 @@ const SetSettings = ({ set, onSetUpdated }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [archetypeForm, setArchetypeForm] = useState({ name: '', color_pair: 'WU', description: '' });
+  const [archetypeModalOpen, setArchetypeModalOpen] = useState(false);
+  const [editingArchetype, setEditingArchetype] = useState(null);
   const [archError, setArchError] = useState('');
   const [archLoading, setArchLoading] = useState(false);
 
@@ -85,28 +87,23 @@ const SetSettings = ({ set, onSetUpdated }) => {
     } catch {}
   };
 
-  const handleArchetypeCreate = async (e) => {
-    e.preventDefault();
-    setArchError('');
-    setArchLoading(true);
-    try {
-      const res = await fetch(`/api/sets/${set.id}/archetypes`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(archetypeForm)
-      });
-      if (res.ok) {
-        setArchetypeForm({ name: '', color_pair: 'WU', description: '' });
-        await refreshArchetypes();
-      } else {
-        const err = await res.json();
-        setArchError(err.message || 'Failed to create archetype');
-      }
-    } catch (err) {
-      setArchError('Network error. Please try again.');
-    } finally {
-      setArchLoading(false);
-    }
+  const handleCreateArchetype = () => {
+    setEditingArchetype(null);
+    setArchetypeModalOpen(true);
+  };
+
+  const handleEditArchetype = (archetype) => {
+    setEditingArchetype(archetype);
+    setArchetypeModalOpen(true);
+  };
+
+  const handleArchetypeModalClose = () => {
+    setArchetypeModalOpen(false);
+    setEditingArchetype(null);
+  };
+
+  const handleArchetypeUpdated = async () => {
+    await refreshArchetypes();
   };
 
   const handleArchetypeDelete = async (archId) => {
@@ -279,42 +276,57 @@ const SetSettings = ({ set, onSetUpdated }) => {
 
       {/* Archetypes */}
       <div className="card">
-        <h3 className="text-xl font-semibold mb-4">Archetypes (two-color pairs)</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold">Archetypes (2 & 3-color combinations)</h3>
+          <button
+            onClick={handleCreateArchetype}
+            className="btn btn-primary btn-sm"
+          >
+            <Plus size={16} />
+            Add Archetype
+          </button>
+        </div>
+        
         {archError && <div className="error-state mb-4">{archError}</div>}
-        <form onSubmit={handleArchetypeCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-          <div className="form-group">
-            <label className="form-label" htmlFor="arch_name">Name</label>
-            <input id="arch_name" className="form-input" value={archetypeForm.name} onChange={e=>setArchetypeForm({...archetypeForm, name:e.target.value})} placeholder="e.g., WU Flyers" required />
-          </div>
-          <div className="form-group">
-            <label className="form-label" htmlFor="arch_pair">Color Pair</label>
-            <select id="arch_pair" className="form-select" value={archetypeForm.color_pair} onChange={e=>setArchetypeForm({...archetypeForm, color_pair:e.target.value})}>
-              {['WU','UB','BR','RG','GW','WB','UR','BG','RW','GU'].map(p=> (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group md:col-span-2">
-            <label className="form-label" htmlFor="arch_desc">Description</label>
-            <input id="arch_desc" className="form-input" value={archetypeForm.description} onChange={e=>setArchetypeForm({...archetypeForm, description:e.target.value})} placeholder="Short description" />
-          </div>
-          <div className="md:col-span-4 flex justify-end">
-            <button className="btn btn-primary" disabled={archLoading}>{archLoading ? 'Adding...' : 'Add Archetype'}</button>
-          </div>
-        </form>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(set.archetypes || []).map(a => (
-            <div key={a.id} className="border rounded p-3 flex items-start justify-between">
-              <div>
-                <div className="font-semibold">{a.color_pair} — {a.name}</div>
-                {a.description && (<div className="text-sm text-gray-600 mt-1">{a.description}</div>)}
+            <div key={a.id} className="border rounded p-4 flex items-start justify-between">
+              <div className="flex-1">
+                <div className="font-semibold text-lg">{a.title || a.name}</div>
+                <div className="text-sm text-gray-600 mb-2">
+                  <span className="font-mono bg-gray-100 px-2 py-1 rounded">{a.color_pair}</span>
+                  {a.name !== a.title && (
+                    <span className="ml-2 text-gray-500">({a.name})</span>
+                  )}
+                </div>
+                {a.description && (
+                  <div className="text-sm text-gray-700 mt-2">{a.description}</div>
+                )}
               </div>
-              <button className="btn btn-danger btn-sm" onClick={()=>handleArchetypeDelete(a.id)}>Delete</button>
+              <div className="flex gap-2 ml-4">
+                <button 
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => handleEditArchetype(a)}
+                  title="Edit Archetype"
+                >
+                  <Edit size={14} />
+                </button>
+                <button 
+                  className="btn btn-danger btn-sm" 
+                  onClick={() => handleArchetypeDelete(a.id)}
+                  title="Delete Archetype"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </div>
           ))}
           {(set.archetypes || []).length === 0 && (
-            <div className="text-sm text-gray-600">No archetypes yet. Add one above.</div>
+            <div className="col-span-2 text-center py-8 text-gray-600">
+              <div className="text-lg mb-2">No archetypes yet</div>
+              <div className="text-sm">Click "Add Archetype" to create your first archetype</div>
+            </div>
           )}
         </div>
       </div>
@@ -366,6 +378,14 @@ const SetSettings = ({ set, onSetUpdated }) => {
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
         setName={set.name}
+      />
+
+      <ArchetypeModal
+        archetype={editingArchetype}
+        isOpen={archetypeModalOpen}
+        onClose={handleArchetypeModalClose}
+        onArchetypeUpdated={handleArchetypeUpdated}
+        setId={set.id}
       />
     </div>
   );
