@@ -318,11 +318,7 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-              <Eye className="w-5 h-5 text-white" />
-            </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Cards</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {filteredAndSortedCards.length} of {cards.length} cards
                 {hasActiveFilters() && ' (filtered)'}
@@ -333,15 +329,11 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
         
         <div className="flex items-center gap-3">
           <button
-            className={`group relative inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
-              showFilters 
-                ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700' 
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700'
-            }`}
+            className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setShowFilters(!showFilters)}
             title="Toggle filters"
           >
-            <Filter size={16} className="mr-2 group-hover:scale-110 transition-transform duration-200" />
+            <Filter size={16} className="mr-2" />
             Filter
             {hasActiveFilters() && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
@@ -350,28 +342,20 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
           
           <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
             <button
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                viewMode === 'grid' 
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+              className={`btn btn-sm ${viewMode === 'grid' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('grid')}
               title="Grid view"
             >
               <GridIcon size={16} />
-              <span className="hidden sm:inline">Grid</span>
+              <span className="hidden sm:inline ml-1">Grid</span>
             </button>
             <button
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                viewMode === 'list' 
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-              }`}
+              className={`btn btn-sm ${viewMode === 'list' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setViewMode('list')}
               title="List view"
             >
               <ListIcon size={16} />
-              <span className="hidden sm:inline">List</span>
+              <span className="hidden sm:inline ml-1">List</span>
             </button>
           </div>
         </div>

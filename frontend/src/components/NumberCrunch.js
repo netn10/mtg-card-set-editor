@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, AlertCircle } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const NumberCrunch = ({ setId }) => {
@@ -95,7 +95,6 @@ const NumberCrunch = ({ setId }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3 mb-6">
-        <BarChart3 className="text-primary" size={24} />
         <h2 className="text-2xl font-bold">Number Crunch Analysis</h2>
       </div>
 
@@ -232,7 +231,6 @@ const NumberCrunch = ({ setId }) => {
       {/* Recommendations */}
       <div className="card">
         <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <AlertCircle className="text-yellow-500" size={20} />
           Recommendations
         </h3>
         <div className="space-y-2">

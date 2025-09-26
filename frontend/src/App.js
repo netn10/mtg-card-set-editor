@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Plus, Settings, BarChart3, CreditCard } from 'lucide-react';
+import { Plus, Settings, BarChart3 } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import SetList from './components/SetList';
@@ -74,7 +74,6 @@ function App() {
               <div className="container">
                 <div className="flex items-center justify-between">
                   <Link to="/" className="logo">
-                    <CreditCard className="logo-icon" />
                     <span>MTG Set Editor</span>
                   </Link>
                   <div className="flex items-center gap-6">

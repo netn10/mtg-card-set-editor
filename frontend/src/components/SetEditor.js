@@ -76,6 +76,26 @@ const SetEditor = ({ onSetUpdated }) => {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
+  const handleTabKeyDown = (e) => {
+    const currentIndex = tabs.findIndex(t => t.id === activeTab);
+    if (currentIndex === -1) return;
+    if (e.key === 'ArrowRight') {
+      const next = (currentIndex + 1) % tabs.length;
+      setActiveTab(tabs[next].id);
+      e.preventDefault();
+    } else if (e.key === 'ArrowLeft') {
+      const prev = (currentIndex - 1 + tabs.length) % tabs.length;
+      setActiveTab(tabs[prev].id);
+      e.preventDefault();
+    } else if (e.key === 'Home') {
+      setActiveTab(tabs[0].id);
+      e.preventDefault();
+    } else if (e.key === 'End') {
+      setActiveTab(tabs[tabs.length - 1].id);
+      e.preventDefault();
+    }
+  };
+
   return (
     <div>
       <div className="flex items-center gap-4 mb-6">
@@ -141,7 +161,7 @@ const SetEditor = ({ onSetUpdated }) => {
 
       {/* Professional Tab Navigation */}
       <div className="mb-8">
-        <div className="tab-navigation">
+        <div className="tab-navigation" role="tablist" aria-label="Set editor sections">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -150,6 +170,12 @@ const SetEditor = ({ onSetUpdated }) => {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`tab-button ${isActive ? 'active' : ''}`}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`panel-${tab.id}`}
+                id={`tab-${tab.id}`}
+                tabIndex={isActive ? 0 : -1}
+                onKeyDown={handleTabKeyDown}
               >
                 <Icon 
                   size={20} 
@@ -163,34 +189,42 @@ const SetEditor = ({ onSetUpdated }) => {
       </div>
 
       {/* Tab Content */}
-      <div className="min-h-[600px]">
+      <div>
         {activeTab === 'cards' && (
-          <CardList
-            cards={set.cards}
-            archetypes={set.archetypes || []}
-            totalCards={set.total_cards}
-            colorDistribution={set}
-            onCardDeleted={handleCardDeleted}
-          />
+          <div role="tabpanel" id="panel-cards" aria-labelledby="tab-cards">
+            <CardList
+              cards={set.cards}
+              archetypes={set.archetypes || []}
+              totalCards={set.total_cards}
+              colorDistribution={set}
+              onCardDeleted={handleCardDeleted}
+            />
+          </div>
         )}
         
         {activeTab === 'create' && (
-          <CreateCard
-            setId={set.id}
-            archetypes={set.archetypes || []}
-            onCardCreated={handleCardCreated}
-          />
+          <div role="tabpanel" id="panel-create" aria-labelledby="tab-create">
+            <CreateCard
+              setId={set.id}
+              archetypes={set.archetypes || []}
+              onCardCreated={handleCardCreated}
+            />
+          </div>
         )}
         
         {activeTab === 'analysis' && (
-          <NumberCrunch setId={set.id} />
+          <div role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis">
+            <NumberCrunch setId={set.id} />
+          </div>
         )}
         
         {activeTab === 'settings' && (
-          <SetSettings
-            set={set}
-            onSetUpdated={handleSetUpdate}
-          />
+          <div role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
+            <SetSettings
+              set={set}
+              onSetUpdated={handleSetUpdate}
+            />
+          </div>
         )}
       </div>
     </div>

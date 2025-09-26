@@ -101,9 +101,6 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
     <div className="card">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Save className="w-5 h-5 text-white" />
-          </div>
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Add New Card</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">Create a new Magic: The Gathering card</p>
@@ -282,9 +279,6 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
             {/* Card Preview */}
             <div className="mt-8">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                  <Eye className="w-4 h-4 text-white" />
-                </div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Live Preview</h3>
               </div>
               <div className={`card-preview ${
@@ -347,26 +341,26 @@ const CreateCard = ({ setId, archetypes = [], onCardCreated }) => {
               colors: [],
               rarity: 'common'
             })}
-            className="group relative inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+            className="btn btn-secondary"
           >
-            <X className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
+            <X className="w-4 h-4 mr-2" />
             Clear Form
           </button>
           <button
             type="submit"
-            className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            className="btn btn-primary"
             disabled={loading}
           >
             {loading ? (
-              <div className="flex items-center">
+              <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Creating Card...
-              </div>
+                Creating...
+              </>
             ) : (
-              <div className="flex items-center">
-                <Save className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+              <>
+                <Save className="w-4 h-4 mr-2" />
                 Create Card
-              </div>
+              </>
             )}
           </button>
         </div>
