@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Plus, Settings, BarChart3 } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
+import { Plus, BarChart3 } from 'lucide-react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import SetList from './components/SetList';
@@ -14,21 +14,22 @@ const Navigation = () => {
   const location = useLocation();
   
   return (
-    <nav className="tab-navigation">
-      <Link 
+    <nav className="app-nav" aria-label="Primary">
+      <NavLink 
         to="/" 
-        className={`tab-button ${location.pathname === '/' ? 'active' : ''}`}
+        className={({ isActive }) => `nav-chip ${isActive || location.pathname.startsWith('/set') ? 'is-active' : ''}`}
+        end
       >
-        <BarChart3 size={16} className="tab-icon" />
-        <span>Sets</span>
-      </Link>
-      <Link 
+        <BarChart3 size={16} aria-hidden="true" />
+        <span>Dashboard</span>
+      </NavLink>
+      <NavLink 
         to="/create" 
-        className={`tab-button ${location.pathname === '/create' ? 'active' : ''}`}
+        className={({ isActive }) => `nav-chip ${isActive ? 'is-active' : ''}`}
       >
-        <Plus size={16} className="tab-icon" />
-        <span>New Set</span>
-      </Link>
+        <Plus size={16} aria-hidden="true" />
+        <span>Create Set</span>
+      </NavLink>
     </nav>
   );
 };
@@ -70,22 +71,25 @@ function App() {
       <NotificationProvider>
         <Router>
           <div className="App">
-            <header className="app-header">
-              <div className="container">
-                <div className="flex items-center justify-between">
-                  <Link to="/" className="logo">
-                    <span>MTG Set Editor</span>
-                  </Link>
-                  <div className="flex items-center gap-6">
-                    <Navigation />
-                    <ThemeToggle />
+            <div className="app-gradient" aria-hidden="true"></div>
+            <header className="app-shell-header">
+              <div className="container header-inner">
+                <Link to="/" className="brand">
+                  <span className="brand-mark" aria-hidden="true">MTG</span>
+                  <div className="brand-copy">
+                    <span className="brand-title">Magic Card Studio</span>
+                    <span className="brand-subtitle">Design custom expansions with confidence</span>
                   </div>
+                </Link>
+                <div className="header-actions">
+                  <Navigation />
+                  <ThemeToggle />
                 </div>
               </div>
             </header>
 
-            <main className="main-content">
-              <div className="container">
+            <main className="app-shell-main" role="main">
+              <div className="container main-container">
                 <Routes>
                   <Route 
                     path="/" 
@@ -117,6 +121,13 @@ function App() {
                 </Routes>
               </div>
             </main>
+
+            <footer className="app-shell-footer">
+              <div className="container footer-inner">
+                <p className="footer-title">Craft better sets, faster.</p>
+                <p className="footer-copy">Magic Card Studio keeps your custom designs organised while highlighting what still needs attention.</p>
+              </div>
+            </footer>
           </div>
         </Router>
       </NotificationProvider>

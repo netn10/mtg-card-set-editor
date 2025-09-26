@@ -1,50 +1,45 @@
 import React from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, Trash2 } from 'lucide-react';
 
 const DeleteCardModal = ({ isOpen, onClose, onConfirm, cardName }) => {
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="modal">
+      <div className="modal modal--danger">
         <div className="modal-header">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-red-100 rounded-full">
-              <AlertTriangle className="text-red-600" size={20} />
+          <div className="modal-header__leading">
+            <div className="modal-icon modal-icon--danger">
+              <Trash2 size={18} />
             </div>
-            <h2 className="modal-title">Delete Card</h2>
+            <div>
+              <h2 className="modal-title">Delete card</h2>
+              <p className="modal-subtitle">Removing this card is permanent</p>
+            </div>
           </div>
-          <button className="modal-close" onClick={onClose}>
+          <button className="modal-close" onClick={onClose} aria-label="Close modal">
             <X size={20} />
           </button>
         </div>
 
         <div className="modal-body">
-          <div className="text-center">
-            <p className="text-gray-700 mb-4">
-              Are you sure you want to delete <strong>"{cardName}"</strong>?
+          <div className="modal-body__content">
+            <p>
+              Are you sure you want to delete <strong>{cardName}</strong> from this set?
             </p>
-            <p className="text-sm text-gray-500 mb-6">
-              This action cannot be undone.
+            <p className="modal-body__note">
+              Any archetype assignments and statistics will update automatically after deletion.
             </p>
           </div>
         </div>
 
         <div className="modal-footer">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-secondary"
-          >
+          <button type="button" onClick={onClose} className="btn btn-secondary">
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="btn btn-danger"
-          >
+          <button type="button" onClick={onConfirm} className="btn btn-danger">
             <AlertTriangle size={16} />
-            Delete Card
+            Delete card
           </button>
         </div>
       </div>

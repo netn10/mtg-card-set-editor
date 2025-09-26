@@ -1,4 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import {
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Info
+} from 'lucide-react';
 
 const Notification = ({
   type = 'info',
@@ -25,31 +31,33 @@ const Notification = ({
     setTimeout(() => onClose?.(), 300);
   };
 
-  const typeClass = {
-    success: 'notification-success',
-    error: 'notification-error',
-    warning: 'notification-warning',
-    info: 'notification-info'
-  }[type] || 'notification-info';
+  const variant = type;
+
+  const iconMap = {
+    success: CheckCircle2,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info
+  };
+
+  const Icon = iconMap[variant] || Info;
 
   if (!show) return null;
 
   return (
-    <div
-      className={`notification ${typeClass} ${show ? 'notification-enter' : 'notification-exit'}`}
-      role="status"
-      aria-live="polite"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex-1 min-w-0">
-          {title && (
-            <h4 className="notification-title">{title}</h4>
-          )}
-          <p className="notification-message">{message}</p>
+    <div className={`notification notification--${variant} ${show ? '' : 'is-exiting'}`} role="status" aria-live="polite">
+      <div className="notification__decor" aria-hidden="true"></div>
+      <div className="notification__content">
+        <div className="notification__icon">
+          <Icon size={18} />
+        </div>
+        <div className="notification__body">
+          {title && <h4 className="notification__title">{title}</h4>}
+          <p className="notification__message">{message}</p>
         </div>
         <button
           onClick={handleClose}
-          className="notification-close"
+          className="notification__close"
           aria-label="Close notification"
         >
           ×

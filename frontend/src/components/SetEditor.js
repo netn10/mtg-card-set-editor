@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, BarChart3, Settings, Eye, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, BarChart3, Settings, Eye } from 'lucide-react';
 import CardList from './CardList';
 import CreateCard from './CreateCard';
 import NumberCrunch from './NumberCrunch';
@@ -46,6 +46,12 @@ const SetEditor = ({ onSetUpdated }) => {
 
   const handleCardDeleted = () => {
     fetchSet(); // Refresh the set data
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const parsed = new Date(dateString);
+    return Number.isNaN(parsed.getTime()) ? '—' : parsed.toLocaleDateString();
   };
 
   if (loading) {
@@ -97,101 +103,90 @@ const SetEditor = ({ onSetUpdated }) => {
   };
 
   return (
-    <div>
-      <div className="flex items-center gap-4 mb-6">
-        <button
-          onClick={() => navigate('/')}
-          className="btn btn-secondary"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold">{set.name}</h1>
-          {set.description && (
-            <p className="text-gray-600 mt-1">{set.description}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Set Stats */}
-      <div className="card mb-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{set.cards.length}</div>
-            <div className="text-sm text-gray-500">Cards Created</div>
+    <div className="set-editor">
+      <section className="set-hero card">
+        <div className="set-hero__header">
+          <button onClick={() => navigate('/')} className="btn btn-secondary btn-icon" title="Back to sets">
+            <ArrowLeft size={18} />
+          </button>
+          <div className="set-hero__meta">
+            <h1 className="set-hero__title">{set.name}</h1>
+            {set.description && <p className="set-hero__description">{set.description}</p>}
+            <div className="set-hero__chips">
+              <span className="set-chip">{set.cards.length} cards created</span>
+              <span className="set-chip">Target {set.total_cards}</span>
+              <span className="set-chip">Created {formatDate(set.created_at)}</span>
+            </div>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">{set.total_cards}</div>
-            <div className="text-sm text-gray-500">Target Total</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">
+          <div
+            className="set-hero__progress"
+            style={{ '--progress': Math.round((set.cards.length / set.total_cards) * 100) }}
+          >
+            <span className="set-hero__progress-value">
               {Math.round((set.cards.length / set.total_cards) * 100)}%
+            </span>
+            <span className="set-hero__progress-label">Complete</span>
+          </div>
+        </div>
+
+        <div className="set-hero__stats">
+          <div className="set-hero__stat">
+            <span className="set-hero__stat-label">Remaining cards</span>
+            <span className="set-hero__stat-value">{set.total_cards - set.cards.length}</span>
+          </div>
+          <div className="set-hero__stat">
+            <span className="set-hero__stat-label">Archetypes</span>
+            <span className="set-hero__stat-value">{set.archetypes?.length || 0}</span>
+          </div>
+          <div className="set-hero__stat">
+            <span className="set-hero__stat-label">Last updated</span>
+            <span className="set-hero__stat-value">{formatDate(set.updated_at || set.created_at)}</span>
+          </div>
+        </div>
+
+        <div className="set-hero__colors" aria-label="Color distribution overview">
+          {[
+            { key: 'white_cards', color: 'white', label: 'White' },
+            { key: 'blue_cards', color: 'blue', label: 'Blue' },
+            { key: 'black_cards', color: 'black', label: 'Black' },
+            { key: 'red_cards', color: 'red', label: 'Red' },
+            { key: 'green_cards', color: 'green', label: 'Green' }
+          ].map(({ key, color, label }) => (
+            <div key={key} className="set-hero__color">
+              <div className={`color-indicator color-${color}`}></div>
+              <span className="set-hero__color-label">{label}</span>
+              <span className="set-hero__color-value">{set[key] ?? 0}</span>
             </div>
-            <div className="text-sm text-gray-500">Complete</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary">
-              {set.total_cards - set.cards.length}
-            </div>
-            <div className="text-sm text-gray-500">Remaining</div>
-          </div>
+          ))}
         </div>
+      </section>
 
-        {/* Color Distribution Preview */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-3">Color Distribution</h3>
-          <div className="grid grid-cols-5 gap-4">
-            {[
-              { key: 'white_cards', color: 'white', label: 'W' },
-              { key: 'blue_cards', color: 'blue', label: 'U' },
-              { key: 'black_cards', color: 'black', label: 'B' },
-              { key: 'red_cards', color: 'red', label: 'R' },
-              { key: 'green_cards', color: 'green', label: 'G' }
-            ].map(({ key, color, label }) => (
-              <div key={key} className="text-center">
-                <div className={`color-indicator color-${color} mx-auto mb-2`}></div>
-                <div className="text-sm text-gray-500">{label}</div>
-                <div className="font-medium">{set[key]}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <nav className="section-tabs" role="tablist" aria-label="Set editor sections">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`section-tabs__item ${isActive ? 'is-active' : ''}`}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`panel-${tab.id}`}
+              id={`tab-${tab.id}`}
+              tabIndex={isActive ? 0 : -1}
+              onKeyDown={handleTabKeyDown}
+            >
+              <Icon size={18} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-      {/* Professional Tab Navigation */}
-      <div className="mb-8">
-        <div className="tab-navigation" role="tablist" aria-label="Set editor sections">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`tab-button ${isActive ? 'active' : ''}`}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`panel-${tab.id}`}
-                id={`tab-${tab.id}`}
-                tabIndex={isActive ? 0 : -1}
-                onKeyDown={handleTabKeyDown}
-              >
-                <Icon 
-                  size={20} 
-                  className="tab-icon"
-                />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Tab Content */}
-      <div>
+      <div className="set-editor__content">
         {activeTab === 'cards' && (
-          <div role="tabpanel" id="panel-cards" aria-labelledby="tab-cards">
+          <section role="tabpanel" id="panel-cards" aria-labelledby="tab-cards">
             <CardList
               cards={set.cards}
               archetypes={set.archetypes || []}
@@ -199,32 +194,29 @@ const SetEditor = ({ onSetUpdated }) => {
               colorDistribution={set}
               onCardDeleted={handleCardDeleted}
             />
-          </div>
+          </section>
         )}
-        
+
         {activeTab === 'create' && (
-          <div role="tabpanel" id="panel-create" aria-labelledby="tab-create">
+          <section role="tabpanel" id="panel-create" aria-labelledby="tab-create">
             <CreateCard
               setId={set.id}
               archetypes={set.archetypes || []}
               onCardCreated={handleCardCreated}
             />
-          </div>
+          </section>
         )}
-        
+
         {activeTab === 'analysis' && (
-          <div role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis">
+          <section role="tabpanel" id="panel-analysis" aria-labelledby="tab-analysis">
             <NumberCrunch setId={set.id} />
-          </div>
+          </section>
         )}
-        
+
         {activeTab === 'settings' && (
-          <div role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
-            <SetSettings
-              set={set}
-              onSetUpdated={handleSetUpdate}
-            />
-          </div>
+          <section role="tabpanel" id="panel-settings" aria-labelledby="tab-settings">
+            <SetSettings set={set} onSetUpdated={handleSetUpdate} />
+          </section>
         )}
       </div>
     </div>

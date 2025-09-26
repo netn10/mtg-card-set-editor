@@ -1,5 +1,16 @@
 import React, { useState, useMemo } from 'react';
-import { Edit, Trash2, Eye, Grid as GridIcon, List as ListIcon, Filter, SortAsc, SortDesc, X } from 'lucide-react';
+import {
+  Edit,
+  Trash2,
+  Eye,
+  Grid as GridIcon,
+  List as ListIcon,
+  Filter,
+  SortAsc,
+  SortDesc,
+  X,
+  Compass
+} from 'lucide-react';
 import CardModal from './CardModal';
 import DeleteCardModal from './DeleteCardModal';
 import MTGCard from './MTGCard';
@@ -302,11 +313,11 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
 
   if (cards.length === 0) {
     return (
-      <div className="empty-state">
-        <Eye className="empty-state-icon" />
-        <h3 className="text-xl font-semibold mb-2">No Cards Yet</h3>
-        <p className="text-gray-500">
-          Start adding cards to your set to see them here.
+      <div className="card collection-empty">
+        <Eye className="collection-empty__icon" />
+        <h3 className="set-card__title">No cards yet</h3>
+        <p className="set-card__description">
+          Start adding cards to fill out this set’s slots. Track color balance, rarity spread, and archetypes as you go.
         </p>
       </div>
     );
@@ -315,80 +326,68 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
   return (
     <div>
       {/* Enhanced Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {filteredAndSortedCards.length} of {cards.length} cards
-                {hasActiveFilters() && ' (filtered)'}
-              </p>
-            </div>
+      <div className="collection-header">
+        <div className="collection-header__primary">
+          <div className="collection-header__icon">
+            <Compass size={18} />
+          </div>
+          <div>
+            <h2 className="collection-header__title">Set collection</h2>
+            <p className="collection-header__meta">
+              {filteredAndSortedCards.length} of {cards.length} cards
+              {hasActiveFilters() && ' (filtered)'}
+            </p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-3">
+
+        <div className="collection-header__actions">
           <button
-            className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
+            className={`btn btn-sm ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setShowFilters(!showFilters)}
             title="Toggle filters"
           >
-            <Filter size={16} className="mr-2" />
-            Filter
-            {hasActiveFilters() && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-            )}
+            <Filter size={16} />
+            Filters
+            {hasActiveFilters() && <span className="dot-indicator" />}
           </button>
-          
-          <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 border border-gray-200 dark:border-gray-700">
+
+          <div className="segmented-control segmented-control--small" role="radiogroup" aria-label="Select card view">
             <button
-              className={`btn btn-sm ${viewMode === 'grid' ? 'btn-primary' : 'btn-secondary'}`}
+              className={`segmented-control__option ${viewMode === 'grid' ? 'is-active' : ''}`}
               onClick={() => setViewMode('grid')}
-              title="Grid view"
+              aria-pressed={viewMode === 'grid'}
             >
-              <GridIcon size={16} />
-              <span className="hidden sm:inline ml-1">Grid</span>
+              <GridIcon size={15} />
+              <span>Grid</span>
             </button>
             <button
-              className={`btn btn-sm ${viewMode === 'list' ? 'btn-primary' : 'btn-secondary'}`}
+              className={`segmented-control__option ${viewMode === 'list' ? 'is-active' : ''}`}
               onClick={() => setViewMode('list')}
-              title="List view"
+              aria-pressed={viewMode === 'list'}
             >
-              <ListIcon size={16} />
-              <span className="hidden sm:inline ml-1">List</span>
+              <ListIcon size={15} />
+              <span>List</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Filter and Sort Controls */}
       {showFilters && (
-        <div className="card mb-6 border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Filter className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Filter & Sort</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Refine your card collection</p>
-              </div>
+        <div className="card filters-panel">
+          <div className="filters-panel__header">
+            <div className="filters-panel__title">
+              <Filter size={18} />
+              Refine your card collection
             </div>
-            <div className="flex items-center gap-2">
-              {hasActiveFilters() && (
-                <button
-                  onClick={clearFilters}
-                  className="group inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-all duration-200"
-                  title="Clear all filters"
-                >
-                  <X size={16} className="group-hover:rotate-90 transition-transform duration-200" />
-                  Clear All
-                </button>
-              )}
-            </div>
+            {hasActiveFilters() && (
+              <button onClick={clearFilters} className="filters-reset" title="Clear all filters">
+                <X size={14} />
+                Clear all
+              </button>
+            )}
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+
+          <div className="filters-grid">
             {/* Name Filter */}
             <div className="form-group">
               <label className="form-label flex items-center gap-2">
@@ -488,7 +487,7 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
                 <span className="text-orange-500">📊</span>
                 Sort By
               </label>
-              <div className="flex flex-wrap gap-2">
+          <div className="segmented-control segmented-control--small" role="radiogroup" aria-label="Sort cards">
                 {[
                   { key: 'name', label: 'Name', icon: '📝' },
                   { key: 'rarity', label: 'Rarity', icon: '⭐' },
@@ -500,11 +499,8 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
                   <button
                     key={option.key}
                     onClick={() => handleSortChange(option.key)}
-                    className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      sortBy === option.key 
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-sm' 
-                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-                    }`}
+                className={`segmented-control__option ${sortBy === option.key ? 'is-active' : ''}`}
+                aria-pressed={sortBy === option.key}
                   >
                     <span>{option.icon}</span>
                     <span>{option.label}</span>

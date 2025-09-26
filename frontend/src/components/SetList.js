@@ -1,6 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Eye, Plus, Filter, SortAsc, SortDesc, X } from 'lucide-react';
+import {
+  Trash2,
+  Eye,
+  Plus,
+  Filter,
+  SortAsc,
+  SortDesc,
+  X,
+  LayoutGrid,
+  Rows,
+  Sparkles
+} from 'lucide-react';
 import DeleteSetModal from './DeleteSetModal';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -177,16 +188,28 @@ const SetList = ({ sets, loading, onDelete, onUpdate }) => {
     return (
       <div className="empty-state">
         <div className="empty-state-content">
+          <span className="empty-state-badge">Welcome Commander</span>
           <div className="empty-state-icon-wrapper">
+            <Sparkles size={54} className="empty-state-icon" />
           </div>
-          <h3 className="text-2xl font-bold mb-3 text-gray-800">No Sets Created</h3>
-          <p className="text-gray-600 mb-6 max-w-md text-center">
-            Create your first custom Magic: The Gathering set to start designing cards and building your collection.
+          <h3 className="empty-state-title">Build your first custom set</h3>
+          <p className="empty-state-copy">
+            Spark your creativity with a brand-new expansion. Set the target distribution, add archetypes, then craft powerful cards card-by-card.
           </p>
-          <Link to="/create" className="btn btn-primary btn-lg">
-            <Plus size={20} />
-            Create New Set
-          </Link>
+          <div className="empty-state-actions">
+            <Link to="/create" className="btn btn-primary btn-lg">
+              <Plus size={20} />
+              Start a Set
+            </Link>
+            <a
+              className="btn btn-ghost btn-lg"
+              href="https://magic.wizards.com/en/how-to-play"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Learn the basics
+            </a>
+          </div>
         </div>
       </div>
     );
@@ -194,160 +217,131 @@ const SetList = ({ sets, loading, onDelete, onUpdate }) => {
 
   return (
     <div>
-      {/* Enhanced Header - Improved Symmetry */}
-      <div className="flex items-center justify-between mb-8">
-        {/* Left side - Centered and balanced */}
-        <div className="flex items-center justify-center gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-            </div>
-            <div className="flex flex-col items-start">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Custom Sets</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {filteredAndSortedSets.length} of {sets.length} sets
-                {hasActiveFilters() && ' (filtered)'}
-              </p>
-            </div>
+      <div className="sets-header">
+        <div className="sets-header__primary">
+          <div className="sets-header__icon">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h1 className="sets-header__title">Custom Sets</h1>
+            <p className="sets-header__meta">
+              {filteredAndSortedSets.length} of {sets.length} sets
+              {hasActiveFilters() && ' (filtered)'}
+            </p>
           </div>
         </div>
-        
-        {/* Right side - Professional button group with consistent styling */}
-        <div className="flex items-center gap-3">
-          {/* Filter Button */}
+
+        <div className="sets-header__actions">
           <button
-            className={`btn ${showFilters ? 'btn-primary' : 'btn-secondary'} relative transition-all duration-300`}
+            className={`btn btn-sm ${showFilters ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setShowFilters(!showFilters)}
             title="Toggle filters"
-            style={{ minHeight: '3rem' }}
           >
-            <Filter size={18} className="mr-2" />
-            Filter
-            {hasActiveFilters() && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
-            )}
+            <Filter size={16} />
+            Filters
+            {hasActiveFilters() && <span className="dot-indicator" />}
           </button>
-          
-          {/* Grid Button */}
-          <button
-            className={`btn ${viewMode === 'grid' ? 'btn-primary' : 'btn-secondary'} transition-all duration-300`}
-            onClick={() => setViewMode('grid')}
-            title="Grid view"
-            style={{ minHeight: '3rem' }}
-          >
-            <div className="w-5 h-5 mr-2 flex flex-col gap-1 justify-center">
-              <div className="w-full h-1 bg-current rounded"></div>
-              <div className="w-full h-1 bg-current rounded"></div>
-              <div className="w-full h-1 bg-current rounded"></div>
-            </div>
-            Grid
-          </button>
-          
-          {/* List Button */}
-          <button
-            className={`btn ${viewMode === 'list' ? 'btn-primary' : 'btn-secondary'} transition-all duration-300`}
-            onClick={() => setViewMode('list')}
-            title="List view"
-            style={{ minHeight: '3rem' }}
-          >
-            <div className="w-5 h-5 mr-2 flex flex-col gap-1 justify-center">
-              <div className="w-full h-1 bg-current rounded"></div>
-              <div className="w-full h-1 bg-current rounded"></div>
-              <div className="w-full h-1 bg-current rounded"></div>
-            </div>
-            List
-          </button>
+
+          <div className="segmented-control" role="radiogroup" aria-label="Select view mode">
+            <button
+              className={`segmented-control__option ${viewMode === 'grid' ? 'is-active' : ''}`}
+              onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
+            >
+              <LayoutGrid size={16} />
+              <span>Grid</span>
+            </button>
+            <button
+              className={`segmented-control__option ${viewMode === 'list' ? 'is-active' : ''}`}
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+            >
+              <Rows size={16} />
+              <span>List</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Filter and Sort Controls - Improved Symmetry */}
       {showFilters && (
-        <div className="card mb-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-center">Filter & Sort</h3>
-            <div className="flex items-center justify-center gap-2">
-              {hasActiveFilters() && (
-                <button
-                  onClick={clearFilters}
-                  className="btn btn-sm btn-secondary flex items-center justify-center"
-                  title="Clear all filters"
-                >
-                  <X size={14} className="w-3.5 h-3.5" /> Clear
-                </button>
-              )}
+        <div className="card filters-panel">
+          <div className="filters-panel__header">
+            <div className="filters-panel__title">
+              <Filter size={18} />
+              Refine results
             </div>
+            {hasActiveFilters() && (
+              <button className="filters-reset" onClick={clearFilters}>
+                <X size={14} />
+                Clear all
+              </button>
+            )}
           </div>
-          
-          {/* Symmetrical Input Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-            {/* Name Filter */}
-            <div className="flex flex-col items-center min-h-[120px] justify-center">
-              <label className="block text-sm font-medium mb-4 text-center min-h-[1.25rem] w-full">Name</label>
+
+          <div className="filters-grid">
+            <div>
+              <label className="form-label">Name</label>
               <input
                 type="text"
                 value={filters.name}
                 onChange={(e) => handleFilterChange('name', e.target.value)}
-                placeholder="Search by name..."
-                className="input input-sm w-full text-center h-12 px-4 rounded-lg border-2 focus:ring-2 focus:ring-blue-500"
+                placeholder="Search by name"
+                className="form-input"
               />
             </div>
 
-            {/* Description Filter */}
-            <div className="flex flex-col items-center min-h-[120px] justify-center">
-              <label className="block text-sm font-medium mb-4 text-center min-h-[1.25rem] w-full">Description</label>
+            <div>
+              <label className="form-label">Description</label>
               <input
                 type="text"
                 value={filters.description}
                 onChange={(e) => handleFilterChange('description', e.target.value)}
-                placeholder="Search by description..."
-                className="input input-sm w-full text-center h-12 px-4 rounded-lg border-2 focus:ring-2 focus:ring-blue-500"
+                placeholder="Search by description"
+                className="form-input"
               />
             </div>
 
-            {/* Min Cards Filter */}
-            <div className="flex flex-col items-center min-h-[120px] justify-center">
-              <label className="block text-sm font-medium mb-4 text-center min-h-[1.25rem] w-full">Min Cards</label>
+            <div>
+              <label className="form-label">Min Cards</label>
               <input
                 type="number"
                 value={filters.minCards}
                 onChange={(e) => handleFilterChange('minCards', e.target.value)}
-                placeholder="Minimum cards..."
-                className="input input-sm w-full text-center h-12 px-4 rounded-lg border-2 focus:ring-2 focus:ring-blue-500"
+                placeholder="0"
+                className="form-input"
               />
             </div>
 
-            {/* Max Cards Filter */}
-            <div className="flex flex-col items-center min-h-[120px] justify-center">
-              <label className="block text-sm font-medium mb-4 text-center min-h-[1.25rem] w-full">Max Cards</label>
+            <div>
+              <label className="form-label">Max Cards</label>
               <input
                 type="number"
                 value={filters.maxCards}
                 onChange={(e) => handleFilterChange('maxCards', e.target.value)}
-                placeholder="Maximum cards..."
-                className="input input-sm w-full text-center h-12 px-4 rounded-lg border-2 focus:ring-2 focus:ring-blue-500"
+                placeholder="250"
+                className="form-input"
               />
             </div>
           </div>
 
-          {/* Sort Controls - Perfectly Centered */}
-          <div className="flex flex-col items-center p-6">
-            <label className="block text-sm font-medium mb-6 text-center min-h-[1.25rem]">Sort By</label>
-            <div className="flex flex-wrap justify-center gap-4">
+          <div className="filters-panel__sort">
+            <span className="form-label">Sort By</span>
+            <div className="segmented-control" role="radiogroup" aria-label="Sort sets">
               {[
                 { key: 'name', label: 'Name' },
-                { key: 'created_at', label: 'Date Created' },
-                { key: 'card_count', label: 'Current Cards' },
-                { key: 'total_cards', label: 'Target Cards' }
+                { key: 'created_at', label: 'Date created' },
+                { key: 'card_count', label: 'Current cards' },
+                { key: 'total_cards', label: 'Target cards' }
               ].map(option => (
                 <button
                   key={option.key}
+                  className={`segmented-control__option ${sortBy === option.key ? 'is-active' : ''}`}
                   onClick={() => handleSortChange(option.key)}
-                  className={`btn btn-sm flex items-center justify-center h-10 px-6 rounded-lg transition-all duration-300 ${
-                    sortBy === option.key ? 'btn-primary' : 'btn-secondary'
-                  }`}
+                  aria-pressed={sortBy === option.key}
                 >
-                  <span className="text-sm font-semibold">{option.label}</span>
+                  <span>{option.label}</span>
                   {sortBy === option.key && (
-                    sortOrder === 'asc' ? <SortAsc size={14} className="w-3.5 h-3.5 ml-2" /> : <SortDesc size={14} className="w-3.5 h-3.5 ml-2" />
+                    sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />
                   )}
                 </button>
               ))}
@@ -356,95 +350,86 @@ const SetList = ({ sets, loading, onDelete, onUpdate }) => {
         </div>
       )}
 
-      <div className={`grid gap-6 ${
-        viewMode === 'list' 
-          ? 'grid-cols-1' 
-          : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-      }`}>
-        {filteredAndSortedSets.map((set) => (
-          <div key={set.id} className={`card ${
-            viewMode === 'list' 
-              ? 'flex flex-row items-center min-h-[200px]' 
-              : 'min-h-[400px]'
-          }`}>
-            {/* Header Section - Symmetrically sized */}
-            <div className="flex items-start justify-between mb-6 p-4">
-              <div className="flex-1 pr-4 min-h-[80px] flex flex-col justify-center">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2 text-center min-h-[1.5rem]">{set.name}</h3>
-                {set.description && (
-                  <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed text-center min-h-[1rem]">{set.description}</p>
-                )}
+      <div
+        className={`grid gap-6 ${
+          viewMode === 'list'
+            ? 'grid-cols-1'
+            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        }`}
+      >
+        {filteredAndSortedSets.map((set) => {
+          const currentCards = set.card_count || 0;
+          const totalCards = set.total_cards || 0;
+          const completion = totalCards ? Math.round((currentCards / totalCards) * 100) : 0;
+          const clampedCompletion = Math.max(0, Math.min(100, completion));
+          const remainingCards = totalCards ? Math.max(totalCards - currentCards, 0) : 0;
+
+          return (
+            <article
+              key={set.id}
+              className={`card set-card ${viewMode === 'list' ? 'set-card--list' : ''}`}
+            >
+            <header className="set-card__header">
+              <div className="set-card__header-content">
+                <h3 className="set-card__title">{set.name}</h3>
+                {set.description && <p className="set-card__description">{set.description}</p>}
+                <div className="set-card__meta">
+                  <span>Created {formatDate(set.created_at)}</span>
+                  <span>Set ID {set.id}</span>
+                </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0 justify-center items-center h-[80px] w-[100px]">
-                <Link 
-                  to={`/set/${set.id}`} 
-                  className="btn btn-sm btn-secondary flex items-center justify-center w-[44px] h-[44px] rounded-full"
-                  title="View Set"
-                >
-                  <Eye size={18} className="w-4 h-4" />
+              <div className="set-card__actions">
+                <Link to={`/set/${set.id}`} className="btn btn-secondary btn-icon" title="Open set editor">
+                  <Eye size={16} />
                 </Link>
                 <button
                   onClick={() => handleDeleteClick(set)}
-                  className="btn btn-sm btn-danger flex items-center justify-center w-[44px] h-[44px] rounded-full"
-                  title="Delete Set"
+                  className="btn btn-danger btn-icon"
+                  title="Delete set"
                 >
-                  <Trash2 size={18} className="w-4 h-4" />
+                  <Trash2 size={16} />
                 </button>
               </div>
-            </div>
+            </header>
 
-            {/* Stats Section - Consistent sizing */}
-            <div className="grid grid-cols-2 gap-6 mb-6 px-2">
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 flex flex-col items-center justify-center min-h-[100px]">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                    <div className="w-4 h-4"></div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Total Cards</div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{set.card_count || 0}</div>
-                </div>
+            <section className="set-card__stats">
+              <div className="set-card__stat">
+                <span className="set-card__stat-label">Current cards</span>
+                <span className="set-card__stat-value">{currentCards}</span>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 flex flex-col items-center justify-center min-h-[100px]">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="p-3 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                    <div className="w-4 h-4"></div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Target</div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{set.total_cards}</div>
-                </div>
+              <div className="set-card__stat">
+                <span className="set-card__stat-label">Target</span>
+                <span className="set-card__stat-value">{totalCards}</span>
               </div>
-            </div>
+            </section>
 
-            {/* Color Distribution Section - Perfectly Symmetrical */}
-            <div className="mb-6 px-4">
-              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">Color Distribution</h4>
-              <div className="flex justify-center items-center gap-8">
-                {[
-                  { key: 'white_cards', color: 'white', label: 'W' },
-                  { key: 'blue_cards', color: 'blue', label: 'U' },
-                  { key: 'black_cards', color: 'black', label: 'B' },
-                  { key: 'red_cards', color: 'red', label: 'R' },
-                  { key: 'green_cards', color: 'green', label: 'G' }
-                ].map(({ key, color, label }) => (
-                  <div key={key} className="flex flex-col items-center justify-center min-w-[48px] min-h-[56px]">
-                    <div className={`color-indicator color-${color} mb-3 w-10 h-10 border-2 shadow-lg`}></div>
-                    <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 text-center min-h-[0.75rem] w-[16px] text-center">{label}</div>
-                    <div className="text-lg font-bold text-gray-900 dark:text-white text-center min-h-[1.25rem] w-[32px] text-center flex items-center justify-center">{set[key] || 0}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <section className="set-card__colors" aria-label="Color distribution">
+              {[
+                { key: 'white_cards', color: 'white', label: 'W' },
+                { key: 'blue_cards', color: 'blue', label: 'U' },
+                { key: 'black_cards', color: 'black', label: 'B' },
+                { key: 'red_cards', color: 'red', label: 'R' },
+                { key: 'green_cards', color: 'green', label: 'G' }
+              ].map(({ key, color, label }) => (
+                <div key={key} className="set-card__color">
+                  <div className={`color-indicator color-${color}`}></div>
+                  <span className="set-card__color-label">{label}</span>
+                  <span className="set-card__color-value">{set[key] || 0}</span>
+                </div>
+              ))}
+            </section>
 
-            {/* Footer Section - Perfectly Centered & Balanced */}
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 pt-4 px-6 border-t border-gray-200 dark:border-gray-700 min-h-[3rem]">
-              <span className="text-center font-medium">Created {formatDate(set.created_at)}</span>
-            </div>
-          </div>
-        ))}
+            <footer className="set-card__footer">
+              <span>Created {formatDate(set.created_at)}</span>
+              <span className="set-card__progress" style={{ '--progress': `${clampedCompletion}%` }}>
+                <span>{clampedCompletion}% complete</span>
+                <span>·</span>
+                <span>{remainingCards} remaining</span>
+              </span>
+            </footer>
+            </article>
+          );
+        })}
       </div>
 
       <DeleteSetModal
