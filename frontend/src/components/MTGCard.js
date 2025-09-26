@@ -1,18 +1,25 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Edit, Trash2, Eye } from 'lucide-react';
 
-const MTGCard = ({ card, onView, onEdit, onDelete }) => {
+const MTGCard = ({ card, onView, onEdit, onDelete, cardNumber, totalCards }) => {
+  const [viewMode, setViewMode] = useState('render'); // 'render' or 'image'
   // MTG card dimensions (2.5" x 3.5" ratio)
   const cardWidth = 240; // pixels
   const cardHeight = 336; // pixels
 
   const formatManaCost = (manaCost) => {
-    if (!manaCost) return '';
+    if (!manaCost) {
+      return '';
+    }
     
-    // Simple mana cost parsing - you can enhance this later
-    return manaCost.split('').map((symbol, index) => {
-      if (symbol.match(/[0-9]/)) {
-        return <span key={index} className="mana-cost-number">{symbol}</span>;
+    // Parse mana cost with proper curly brace handling
+    const manaSymbols = manaCost.match(/\{[^}]+\}/g) || [];
+    
+    return manaSymbols.map((symbol, index) => {
+      const cleanSymbol = symbol.replace(/[{}]/g, ''); // Remove curly braces
+      
+      if (cleanSymbol.match(/[0-9]/)) {
+        return <span key={index} className="mana-cost-number">{cleanSymbol}</span>;
       } else {
         const colorMap = {
           'W': { color: '#f8f5f0', border: '#d1d5db' },
@@ -22,7 +29,7 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
           'G': { color: '#00733e', border: '#00733e' },
           'X': { color: '#c5c5c5', border: '#9ca3af' }
         };
-        const color = colorMap[symbol] || { color: '#c5c5c5', border: '#9ca3af' };
+        const color = colorMap[cleanSymbol] || { color: '#c5c5c5', border: '#9ca3af' };
         return (
           <span 
             key={index} 
@@ -30,10 +37,10 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
             style={{ 
               backgroundColor: color.color,
               borderColor: color.border,
-              color: symbol === 'W' ? '#000' : '#fff'
+              color: cleanSymbol === 'W' ? '#000' : '#fff'
             }}
           >
-            {symbol}
+            {cleanSymbol}
           </span>
         );
       }
@@ -66,9 +73,23 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
     return 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%)'; // Multicolor
   };
 
+
+  const handleCardClick = (e) => {
+    // Don't toggle if clicking on action buttons
+    if (e.target.closest('.card-actions')) {
+      return;
+    }
+    
+    // Only toggle if there's an image available
+    if (card.image_url) {
+      setViewMode(prev => prev === 'render' ? 'image' : 'render');
+    }
+  };
+
   return (
     <div 
-      className="mtg-card"
+      className={`mtg-card ${card.image_url ? 'has-image' : ''}`}
+      data-view-mode={viewMode}
       style={{
         width: cardWidth,
         height: cardHeight,
@@ -76,26 +97,75 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
         background: getCardBackground(card.colors),
         borderRadius: '12px',
         position: 'relative',
-        cursor: 'pointer',
+        cursor: card.image_url ? 'pointer' : 'default',
         transition: 'all 0.3s ease',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        overflow: 'hidden'
+        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
       }}
+      onClick={handleCardClick}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.25)';
+        if (!card.image_url) {
+          e.currentTarget.style.transform = 'translateY(-4px)';
+          e.currentTarget.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.25)';
+        }
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        if (!card.image_url) {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        }
       }}
     >
+      {viewMode === 'image' && card.image_url ? (
+        // Full image view
+        <div className="card-image-view" style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'rgba(0, 0, 0, 0.1)',
+          position: 'relative'
+        }}>
+          <img 
+            src={card.image_url} 
+            alt={card.name}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              objectFit: 'contain',
+              borderRadius: '8px'
+            }}
+          />
+          {/* Overlay with card name */}
+          <div style={{
+            position: 'absolute',
+            bottom: '8px',
+            left: '8px',
+            right: '8px',
+            background: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
+            {card.name}
+          </div>
+        </div>
+      ) : (
+        // Render view (existing content)
+        <div className="card-render-view">
       {/* Card Header */}
       <div className="card-header" style={{
         padding: '12px',
         borderBottom: '2px solid rgba(0, 0, 0, 0.1)',
-        background: 'rgba(255, 255, 255, 0.9)',
-        position: 'relative'
+        background: 'rgba(255, 255, 255, 0.95)',
+        position: 'relative',
+        borderRadius: '8px 8px 0 0'
       }}>
         <div style={{
           display: 'flex',
@@ -104,12 +174,13 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
           marginBottom: '8px'
         }}>
           <h3 style={{
-            fontSize: '14px',
+            fontSize: '15px',
             fontWeight: 'bold',
             color: '#1f2937',
             margin: 0,
             lineHeight: '1.2',
-            maxWidth: '140px'
+            maxWidth: '140px',
+            fontFamily: 'Arial, sans-serif'
           }}>
             {card.name}
           </h3>
@@ -129,9 +200,10 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
           alignItems: 'center'
         }}>
           <div className="type-line" style={{
-            fontSize: '10px',
+            fontSize: '11px',
             color: '#6b7280',
-            fontWeight: '500'
+            fontWeight: '600',
+            fontFamily: 'Arial, sans-serif'
           }}>
             {card.type_line}
           </div>
@@ -150,13 +222,15 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
 
       {/* Card Art Area */}
       <div className="card-art" style={{
-        height: '120px',
-        background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)',
+        height: '140px',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
         borderBottom: '2px solid rgba(0, 0, 0, 0.1)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        position: 'relative'
+        position: 'relative',
+        margin: '0 8px',
+        borderRadius: '6px'
       }}>
         <div style={{
           color: '#9ca3af',
@@ -184,20 +258,28 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
         padding: '12px',
         flex: 1,
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        background: 'rgba(255, 255, 255, 0.95)',
+        margin: '0 8px',
+        borderRadius: '0 0 6px 6px'
       }}>
         <div style={{
-          fontSize: '10px',
+          fontSize: '11px',
           color: '#374151',
-          lineHeight: '1.3',
+          lineHeight: '1.4',
           flex: 1,
-          overflow: 'hidden'
+          overflow: 'hidden',
+          fontFamily: 'Arial, sans-serif'
         }}>
           {card.text && (
             <div style={{
-              maxHeight: '60px',
+              maxHeight: '80px',
               overflow: 'hidden',
-              textOverflow: 'ellipsis'
+              textOverflow: 'ellipsis',
+              background: card.text.includes('Discard') ? '#fce7f3' : 'transparent',
+              padding: card.text.includes('Discard') ? '8px' : '0',
+              borderRadius: '4px',
+              border: card.text.includes('Discard') ? '1px solid #f9a8d4' : 'none'
             }}>
               {card.text}
             </div>
@@ -219,6 +301,24 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
             border: '1px solid rgba(0, 0, 0, 0.1)'
           }}>
             {card.power}/{card.toughness}
+          </div>
+        )}
+        
+        {/* Card Number Display */}
+        {cardNumber && totalCards && (
+          <div style={{
+            position: 'absolute',
+            bottom: '8px',
+            left: '12px',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            color: '#6b7280',
+            background: 'rgba(255, 255, 255, 0.9)',
+            padding: '2px 6px',
+            borderRadius: '6px',
+            border: '1px solid rgba(0, 0, 0, 0.1)'
+          }}>
+            {cardNumber}/{totalCards}
           </div>
         )}
       </div>
@@ -300,6 +400,8 @@ const MTGCard = ({ card, onView, onEdit, onDelete }) => {
           <Trash2 size={12} />
         </button>
       </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -261,6 +261,62 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
     return range ? range.color : 'colorless';
   };
 
+  // Calculate the actual set position based on color distribution
+  const getActualSetPosition = (card, position) => {
+    if (!colorDistribution || !card.colors || card.colors.length === 0) {
+      return position; // Fallback to grid position
+    }
+    
+    const colorRanges = [];
+    let currentPosition = 1;
+    
+    // Define color order and their counts
+    const colorOrder = [
+      { key: 'white_cards', color: 'white' },
+      { key: 'blue_cards', color: 'blue' },
+      { key: 'black_cards', color: 'black' },
+      { key: 'red_cards', color: 'red' },
+      { key: 'green_cards', color: 'green' },
+      { key: 'colorless_cards', color: 'colorless' },
+      { key: 'multicolor_cards', color: 'multicolor' },
+      { key: 'lands_cards', color: 'land' },
+      { key: 'basic_lands_cards', color: 'basic-land' }
+    ];
+    
+    // Build ranges for each color
+    colorOrder.forEach(({ key, color }) => {
+      const count = colorDistribution[key] || 0;
+      if (count > 0) {
+        colorRanges.push({
+          color: color,
+          start: currentPosition,
+          end: currentPosition + count - 1,
+          count: count
+        });
+        currentPosition += count;
+      }
+    });
+    
+    // Find which color range this card belongs to
+    const cardColor = card.colors.length === 1 ? card.colors[0] : 
+                     card.colors.length > 1 ? 'multicolor' : 'colorless';
+    
+    const range = colorRanges.find(r => r.color === cardColor);
+    if (range) {
+      // Calculate position within the color group based on card order
+      const cardsInColorGroup = filteredAndSortedCards.filter(c => {
+        if (c.colors.length === 1) return c.colors[0] === cardColor;
+        if (c.colors.length > 1) return cardColor === 'multicolor';
+        return cardColor === 'colorless';
+      });
+      
+      const cardIndexInGroup = cardsInColorGroup.findIndex(c => c.id === card.id);
+      return range.start + cardIndexInGroup;
+    }
+    
+    return position; // Fallback to grid position
+  };
+
   // Create grid positions with numbered slots
   const createGridPositions = () => {
     if (totalCards === 0) return [];
@@ -271,26 +327,47 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
     // If filters are active but not sorting by serial, only show filtered cards without empty spots
     if (hasActiveFilters() && sortBy !== 'serial') {
       filteredAndSortedCards.forEach((card, index) => {
+        const position = index + 1;
+        const actualSetPosition = getActualSetPosition(card, position);
         positions.push({
-          position: index + 1,
+          position: position,
           card: card,
           isEmpty: false,
-          expectedColor: getExpectedColorForPosition(card.id) // Use card ID for expected color
+          expectedColor: getExpectedColorForPosition(card.id), // Use card ID for expected color
+          actualSetPosition: actualSetPosition
         });
       });
     } else {
       // Show all positions including empty ones (for serial sorting or no filters)
       const maxSlots = totalCards;
-      const sortedCards = [...filteredAndSortedCards];
+      
+      // Create a map of cards by their actual set position for serial sorting
+      const cardsByPosition = {};
+      if (sortBy === 'serial') {
+        filteredAndSortedCards.forEach(card => {
+          const actualPosition = getActualSetPosition(card, 1); // Get the correct set position
+          cardsByPosition[actualPosition] = card;
+        });
+      }
       
       for (let i = 1; i <= maxSlots; i++) {
-        const card = sortedCards[i - 1] || null;
+        let card = null;
+        if (sortBy === 'serial') {
+          // For serial sorting, place cards in their correct set positions
+          card = cardsByPosition[i] || null;
+        } else {
+          // For other sorting, use the filtered order
+          card = filteredAndSortedCards[i - 1] || null;
+        }
+        
         const expectedColor = getExpectedColorForPosition(i);
+        const actualSetPosition = card ? getActualSetPosition(card, i) : i;
         positions.push({
           position: i,
           card: card,
           isEmpty: !card,
-          expectedColor: expectedColor
+          expectedColor: expectedColor,
+          actualSetPosition: actualSetPosition
         });
       }
     }
@@ -542,7 +619,7 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
             justifyContent: 'center',
             padding: '20px 0'
           }}>
-          {createGridPositions().map(({ position, card, isEmpty, expectedColor }) => (
+          {createGridPositions().map(({ position, card, isEmpty, expectedColor, actualSetPosition }) => (
             <div key={hasActiveFilters() ? card?.id || position : position}>
               {isEmpty ? (
                 <EmptyGridSpot position={position} expectedColor={expectedColor} />
@@ -552,6 +629,8 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
                   onView={(card) => setSelectedCard(card)}
                   onEdit={(card) => setSelectedCard({ ...card, isEditing: true })}
                   onDelete={handleDeleteClick}
+                  cardNumber={actualSetPosition}
+                  totalCards={totalCards}
                 />
               )}
             </div>

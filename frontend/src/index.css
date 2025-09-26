@@ -1172,3 +1172,68 @@ td {
 @media (min-width: 1024px) {
   .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+/* Card view mode animations */
+.mtg-card {
+  transition: all 0.3s ease;
+}
+
+.mtg-card .card-content {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.mtg-card .card-image-view {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Smooth transitions for view mode changes */
+.mtg-card[data-view-mode="image"] .card-render-view {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+.mtg-card[data-view-mode="render"] .card-image-view {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+.mtg-card[data-view-mode="image"] .card-image-view {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.mtg-card[data-view-mode="render"] .card-render-view {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* Hover effects for cards with images */
+.mtg-card.has-image:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.mtg-card.has-image:hover::after {
+  content: "Click to toggle view";
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-align: center;
+  z-index: 10;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

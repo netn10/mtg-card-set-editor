@@ -22,8 +22,6 @@ const ArchetypeModal = ({ archetype, isOpen, onClose, onArchetypeUpdated, setId 
     'WUB', 'UBR', 'BRG', 'RGW', 'GWU', 'WBR', 'URG', 'BGW', 'RWU', 'GUB'
   ];
 
-  const allColorPairs = [...twoColorPairs, ...threeColorPairs];
-
   useEffect(() => {
     if (archetype) {
       setFormData({

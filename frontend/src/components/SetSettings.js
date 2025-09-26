@@ -24,8 +24,6 @@ const SetSettings = ({ set, onSetUpdated }) => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [archetypeModalOpen, setArchetypeModalOpen] = useState(false);
   const [editingArchetype, setEditingArchetype] = useState(null);
-  const [archError, setArchError] = useState('');
-  const [archLoading, setArchLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -286,8 +284,6 @@ const SetSettings = ({ set, onSetUpdated }) => {
             Add Archetype
           </button>
         </div>
-        
-        {archError && <div className="error-state mb-4">{archError}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(set.archetypes || []).map(a => (

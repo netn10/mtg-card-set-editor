@@ -11,6 +11,7 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) =>
     toughness: '',
     colors: [],
     rarity: 'common',
+    image_url: '',
     archetype_id: ''
   });
   const [loading, setLoading] = useState(false);
@@ -43,6 +44,7 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) =>
         toughness: card.toughness || '',
         colors: card.colors || [],
         rarity: card.rarity || 'common',
+        image_url: card.image_url || '',
         archetype_id: card.archetype?.id || ''
       });
     }
@@ -106,11 +108,15 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) =>
   };
 
   const formatManaCost = (manaCost) => {
-    if (!manaCost) return '';
+    if (!manaCost) {
+      return '';
+    }
     return manaCost.replace(/\{([^}]+)\}/g, '$1');
   };
 
-  if (!isOpen || !card) return null;
+  if (!isOpen || !card) {
+    return null;
+  }
 
   const archetypeOptions = archetypes.map(a => ({ 
     value: a.id, 
@@ -206,6 +212,24 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) =>
                       className="form-input form-textarea"
                       rows={4}
                     />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="image_url" className="form-label">
+                      Card Image URL
+                    </label>
+                    <input
+                      type="url"
+                      id="image_url"
+                      name="image_url"
+                      value={formData.image_url}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      placeholder="https://example.com/card-image.jpg"
+                    />
+                    <div className="text-xs text-gray-500 mt-1">
+                      Enter a URL to a card image (JPG, PNG, etc.)
+                    </div>
                   </div>
                 </div>
 
@@ -406,6 +430,18 @@ const CardModal = ({ card, isOpen, onClose, onCardUpdated, archetypes = [] }) =>
                 {card.power && card.toughness && (
                   <div className="text-right font-mono text-lg">
                     {card.power}/{card.toughness}
+                  </div>
+                )}
+
+                {card.image_url && (
+                  <div className="mt-4">
+                    <div className="text-sm text-gray-500 mb-2">Card Image</div>
+                    <img 
+                      src={card.image_url} 
+                      alt={card.name}
+                      className="max-w-full h-auto rounded-lg border border-gray-200"
+                      style={{ maxHeight: '300px' }}
+                    />
                   </div>
                 )}
               </div>

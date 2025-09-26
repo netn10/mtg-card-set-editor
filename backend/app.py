@@ -60,6 +60,7 @@ class Card(db.Model):
     toughness = db.Column(db.String(10))
     colors = db.Column(db.String(20))  # JSON string of colors
     rarity = db.Column(db.String(20), default="common")
+    image_url = db.Column(db.String(500))  # URL to card image
     set_id = db.Column(db.Integer, db.ForeignKey("custom_set.id"), nullable=False)
     archetype_id = db.Column(db.Integer, db.ForeignKey("archetype.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -184,6 +185,7 @@ def get_set(set_id):
                     "toughness": card.toughness,
                     "colors": json.loads(card.colors) if card.colors else [],
                     "rarity": card.rarity,
+                    "image_url": card.image_url,
                     "archetype": (
                         (
                             lambda at: {
@@ -307,6 +309,7 @@ def create_card(set_id):
         toughness=data.get("toughness", ""),
         colors=json.dumps(colors),
         rarity=data.get("rarity", "common"),
+        image_url=data.get("image_url", ""),
         set_id=set_id,
         archetype_id=data.get("archetype_id"),
     )
@@ -326,6 +329,7 @@ def create_card(set_id):
                 "toughness": new_card.toughness,
                 "colors": json.loads(new_card.colors) if new_card.colors else [],
                 "rarity": new_card.rarity,
+                "image_url": new_card.image_url,
                 "message": "Card created successfully",
             }
         ),
@@ -353,6 +357,7 @@ def update_card(card_id):
     card.toughness = data.get("toughness", card.toughness)
     card.colors = json.dumps(colors)
     card.rarity = data.get("rarity", card.rarity)
+    card.image_url = data.get("image_url", card.image_url)
     card.archetype_id = data.get("archetype_id", card.archetype_id)
 
     db.session.commit()
@@ -554,6 +559,12 @@ if __name__ == "__main__":
                         text(
                             "UPDATE archetype SET title = name WHERE title IS NULL OR title = ''"
                         )
+                    )
+
+                # Add image_url column to card table if it doesn't exist
+                if "image_url" not in existing_card_cols:
+                    conn.execute(
+                        text("ALTER TABLE card ADD COLUMN image_url VARCHAR(500)")
                     )
         except Exception as e:
             # Log and continue; app can still run even if migration fails
