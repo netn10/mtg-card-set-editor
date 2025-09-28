@@ -540,18 +540,16 @@ const CardList = ({ cards, archetypes = [], totalCards = 0, colorDistribution = 
                 <span className="text-purple-500">🎨</span>
                 Colors
               </label>
-              <div className="flex flex-wrap gap-2 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="color-filter-container">
                 {['white', 'blue', 'black', 'red', 'green', 'colorless'].map(color => (
                   <button
                     key={color}
                     onClick={() => handleColorFilterToggle(color)}
-                    className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      filters.colors.includes(color) 
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700 shadow-sm' 
-                        : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
+                    className={`color-filter-button ${
+                      filters.colors.includes(color) ? 'color-filter-button--active' : ''
                     }`}
                   >
-                    <div className={`color-indicator color-${color} w-4 h-4 border-2`}></div>
+                    <div className={`color-indicator color-${color}`}></div>
                     <span className="capitalize">{color}</span>
                   </button>
                 ))}
